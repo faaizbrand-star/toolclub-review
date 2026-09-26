@@ -29,6 +29,7 @@ import {
 } from '../services/firestoreService';
 import { ProofItem } from '../types';
 import { Lightbox } from '../components/Lightbox';
+import { compareByDateDescending } from '../utils/dateSorter';
 
 interface UploadPageProps {
   onNavigateHome: () => void;
@@ -92,7 +93,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
     setLoadingProofs(true);
     try {
       const items = await getProofsFromFirestore();
-      setProofsList(items);
+      setProofsList([...items].sort(compareByDateDescending));
     } catch (err) {
       console.error('Failed to load proofs for management:', err);
     } finally {
@@ -345,18 +346,20 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
     setIsLightboxOpen(true);
   };
 
-  // Filtered proofs for search
-  const filteredProofs = proofsList.filter((item) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      item.customerId.toLowerCase().includes(q) ||
-      item.serviceName.toLowerCase().includes(q) ||
-      (item.customerName && item.customerName.toLowerCase().includes(q)) ||
-      (item.notes && item.notes.toLowerCase().includes(q)) ||
-      item.deliveryDate.toLowerCase().includes(q)
-    );
-  });
+  // Filtered proofs for search sorted latest date first
+  const filteredProofs = proofsList
+    .filter((item) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        item.customerId.toLowerCase().includes(q) ||
+        item.serviceName.toLowerCase().includes(q) ||
+        (item.customerName && item.customerName.toLowerCase().includes(q)) ||
+        (item.notes && item.notes.toLowerCase().includes(q)) ||
+        item.deliveryDate.toLowerCase().includes(q)
+      );
+    })
+    .sort(compareByDateDescending);
 
   // Calculate total screenshots
   const totalScreenshotsCount = proofsList.reduce(

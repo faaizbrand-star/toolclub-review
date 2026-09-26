@@ -9,6 +9,7 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 
 dotenv.config();
+import { compareByDateDescending } from './src/utils/dateSorter';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -376,9 +377,7 @@ app.post('/api/admin/change-password', requireAdminAuth, (req: AuthenticatedRequ
 // 4. Admin Get All Proofs & Dashboard Stats
 app.get('/api/admin/proofs', requireAdminAuth, (_req: AuthenticatedRequest, res: Response) => {
   const db = readDb();
-  const proofs = [...db.proofs].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  const proofs = [...db.proofs].sort(compareByDateDescending);
 
   const total = proofs.length;
   const active = proofs.filter((p) => p.status === 'active').length;
@@ -721,7 +720,7 @@ app.get('/api/public/proofs', (_req: Request, res: Response) => {
   const db = readDb();
   const activeProofs = db.proofs
     .filter((p) => p.status === 'active')
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort(compareByDateDescending)
     .map((p) => ({
       id: p.id,
       customerId: p.customerId,

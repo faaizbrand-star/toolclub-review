@@ -25,6 +25,7 @@ import {
 } from '../services/firestoreService';
 import { PublicProofData } from '../types';
 import { Lightbox } from '../components/Lightbox';
+import { compareByDateDescending } from '../utils/dateSorter';
 
 interface FlatScreenshot {
   url: string;
@@ -37,6 +38,7 @@ interface FlatScreenshot {
   verificationHash: string;
   screenshotIndex: number;
   totalScreenshots: number;
+  verifiedAt?: string;
 }
 
 interface HomePageProps {
@@ -88,10 +90,11 @@ export const HomePage: React.FC<HomePageProps> = () => {
     loadProofs();
   }, []);
 
-  // Flatten ALL screenshots into a single seamless unified gallery
+  // Flatten and strictly sort ALL screenshots latest date first (Newest on top, Oldest on bottom)
   const allScreenshots: FlatScreenshot[] = useMemo(() => {
+    const sortedProofs = [...proofs].sort(compareByDateDescending);
     const list: FlatScreenshot[] = [];
-    proofs.forEach((proof) => {
+    sortedProofs.forEach((proof) => {
       proof.screenshots.forEach((url, idx) => {
         list.push({
           url,
@@ -104,9 +107,11 @@ export const HomePage: React.FC<HomePageProps> = () => {
           verificationHash: proof.verificationHash,
           screenshotIndex: idx,
           totalScreenshots: proof.screenshots.length,
+          verifiedAt: proof.verifiedAt,
         });
       });
     });
+    list.sort(compareByDateDescending);
     return list;
   }, [proofs]);
 

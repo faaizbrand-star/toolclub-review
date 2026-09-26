@@ -10,26 +10,13 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { ProofItem, PublicProofData } from '../types';
+import { compareByDateDescending } from '../utils/dateSorter';
 
 const PROOFS_COLLECTION = 'proofs';
 const CACHE_KEY = 'toolclubpk_proofs_cache_v2';
 
-// Initial sample proofs to seed and show instantly with 0ms delay
+// Initial sample proofs ordered latest date first
 export const INITIAL_SAMPLE_PROOFS: ProofItem[] = [
-  {
-    id: 'proof-sample-nordvpn-1',
-    customerId: 'TC-1025',
-    customerName: 'Verified Customer',
-    serviceName: 'NordVPN (1 Year Ultimate)',
-    deliveryDate: 'September 24, 2026',
-    notes: 'Premium 1-Year account activation credentials delivered. Zero tamper seal verified.',
-    screenshots: ['/proof-exact-1.jpg'],
-    status: 'active',
-    createdAt: '2026-09-24T12:00:00.000Z',
-    updatedAt: '2026-09-24T12:00:00.000Z',
-    verifiedAt: '2026-09-24T12:00:00.000Z',
-    verificationHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-  },
   {
     id: 'proof-sample-capcut-2',
     customerId: 'TC-1026',
@@ -43,6 +30,20 @@ export const INITIAL_SAMPLE_PROOFS: ProofItem[] = [
     updatedAt: '2026-09-25T14:30:00.000Z',
     verifiedAt: '2026-09-25T14:30:00.000Z',
     verificationHash: '4a8b1c9f0d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a',
+  },
+  {
+    id: 'proof-sample-nordvpn-1',
+    customerId: 'TC-1025',
+    customerName: 'Verified Customer',
+    serviceName: 'NordVPN (1 Year Ultimate)',
+    deliveryDate: 'September 24, 2026',
+    notes: 'Premium 1-Year account activation credentials delivered. Zero tamper seal verified.',
+    screenshots: ['/proof-exact-1.jpg'],
+    status: 'active',
+    createdAt: '2026-09-24T12:00:00.000Z',
+    updatedAt: '2026-09-24T12:00:00.000Z',
+    verifiedAt: '2026-09-24T12:00:00.000Z',
+    verificationHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
   },
 ];
 
@@ -76,7 +77,8 @@ function updateCache(proofs: ProofItem[]) {
 
 export function getCachedProofsInstant(): PublicProofData[] {
   const cached = inMemoryProofsCache || loadLocalCache() || INITIAL_SAMPLE_PROOFS;
-  return cached
+  const sorted = [...cached].sort(compareByDateDescending);
+  return sorted
     .filter((p) => p.status === 'active')
     .map((p) => ({
       id: p.id,
@@ -115,10 +117,8 @@ export async function getProofsFromFirestore(): Promise<ProofItem[]> {
       });
     });
 
-    // Sort by createdAt descending
-    proofs.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    // Sort strictly by delivery date descending (latest date at top, oldest at bottom)
+    proofs.sort(compareByDateDescending);
 
     updateCache(proofs);
     return proofs;
@@ -127,7 +127,7 @@ export async function getProofsFromFirestore(): Promise<ProofItem[]> {
     // If offline or network error, return cache if available
     const cached = inMemoryProofsCache || loadLocalCache();
     if (cached && cached.length > 0) {
-      return cached;
+      return [...cached].sort(compareByDateDescending);
     }
     throw err;
   }
@@ -221,6 +221,7 @@ export async function saveProofToFirestore(proof: ProofItem): Promise<void> {
   } else {
     updatedList = [cleanProof, ...currentList];
   }
+  updatedList.sort(compareByDateDescending);
   updateCache(updatedList);
 
   // Prepare sanitized payload for Firestore (no undefined values)
