@@ -50,9 +50,6 @@ export const HomePage: React.FC<HomePageProps> = () => {
   const [proofs, setProofs] = useState<PublicProofData[]>(() => initialCache);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Filter state (optional quick filter inside the single gallery)
-  const [selectedService, setSelectedService] = useState<string>('all');
-
   // Lightbox state for inspecting screenshots
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState<string[]>([]);
@@ -115,21 +112,9 @@ export const HomePage: React.FC<HomePageProps> = () => {
     return list;
   }, [proofs]);
 
-  // Unique services list for quick pills
-  const services = useMemo(() => {
-    const set = new Set<string>();
-    proofs.forEach((p) => set.add(p.serviceName));
-    return Array.from(set);
-  }, [proofs]);
-
-  const filteredScreenshots = useMemo(() => {
-    if (selectedService === 'all') return allScreenshots;
-    return allScreenshots.filter((item) => item.serviceName === selectedService);
-  }, [allScreenshots, selectedService]);
-
   const openScreenshotInLightbox = (index: number) => {
-    const images = filteredScreenshots.map((item) => item.url);
-    const current = filteredScreenshots[index];
+    const images = allScreenshots.map((item) => item.url);
+    const current = allScreenshots[index];
     setLightboxImages(images);
     setLightboxIndex(index);
     setLightboxTitle(`${current.serviceName} - Customer ${current.customerId}`);
@@ -217,51 +202,25 @@ export const HomePage: React.FC<HomePageProps> = () => {
       {/* SINGLE UNIFIED PORTION FOR ALL SCREENSHOTS */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
-        {/* Gallery Control Bar */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-xl shadow-xl">
+        {/* Gallery Control & Header Section */}
+        <div className="mb-6 p-4 rounded-2xl bg-slate-900/50 border border-slate-800 backdrop-blur-xl shadow-xl flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#4ADE80]/15 border border-[#4ADE80]/40 flex items-center justify-center text-[#4ADE80] font-bold">
-              <Layers className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-[#4ADE80]/15 border border-[#4ADE80]/40 flex items-center justify-center text-[#4ADE80] shrink-0">
+              <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white tracking-tight">
-                All Delivery Screenshots ({filteredScreenshots.length})
+              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                Previous Customer Activations &amp; Order Delivery Proofs
               </h2>
               <p className="text-xs text-slate-400">
-                Continuous gallery of all customer order proofs in one place
+                Below are real screenshots showing previous customer tool activations and successful deliveries of orders
               </p>
             </div>
           </div>
-
-          {/* Quick Filter Categories if multiple services exist */}
-          {services.length > 1 && (
-            <div className="flex flex-wrap items-center gap-1.5 text-xs">
-              <button
-                onClick={() => setSelectedService('all')}
-                className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
-                  selectedService === 'all'
-                    ? 'bg-[#4ADE80] text-slate-950 shadow-md shadow-[#4ADE80]/30 font-black'
-                    : 'bg-slate-800/80 text-slate-400 hover:text-[#4ADE80] hover:bg-slate-800'
-                }`}
-              >
-                All ({allScreenshots.length})
-              </button>
-              {services.map((svc) => (
-                <button
-                  key={svc}
-                  onClick={() => setSelectedService(svc)}
-                  className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer truncate max-w-[150px] ${
-                    selectedService === svc
-                      ? 'bg-[#4ADE80] text-slate-950 shadow-md shadow-[#4ADE80]/30 font-black'
-                      : 'bg-slate-800/80 text-slate-400 hover:text-[#4ADE80] hover:bg-slate-800'
-                  }`}
-                  title={svc}
-                >
-                  {svc}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-mono text-[#4ADE80]">
+            <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse"></span>
+            <span>{allScreenshots.length} Deliveries Live</span>
+          </div>
         </div>
 
         {/* Loading State */}
@@ -272,7 +231,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
             </div>
             <p className="text-base font-semibold text-slate-300">Loading delivery proofs gallery...</p>
           </div>
-        ) : filteredScreenshots.length === 0 ? (
+        ) : allScreenshots.length === 0 ? (
           <div className="py-20 text-center bg-slate-900/40 rounded-2xl border border-slate-800/80 max-w-lg mx-auto p-8 backdrop-blur-md">
             <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 mx-auto mb-4">
               <ShieldCheck className="w-6 h-6" />
@@ -285,7 +244,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
         ) : (
           /* Glassy Unified Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {filteredScreenshots.map((item, idx) => (
+            {allScreenshots.map((item, idx) => (
               <div
                 key={`${item.proofId}-${idx}`}
                 onClick={() => openScreenshotInLightbox(idx)}
