@@ -9,7 +9,7 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 
 dotenv.config();
-import { compareByDateDescending } from './src/utils/dateSorter';
+import { compareByDateDescending, getTodayFormattedDate } from './src/utils/dateSorter';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -677,7 +677,7 @@ app.post(
 
       const cleanCustomerId = (customerId || `TC-${Math.floor(1000 + Math.random() * 9000)}`).trim().toUpperCase();
       const cleanService = (serviceName || 'Digital Subscription Delivery').trim();
-      const cleanDate = (deliveryDate || 'September 24, 2026').trim();
+      const cleanDate = (deliveryDate || getTodayFormattedDate()).trim();
 
       const db = readDb();
       const now = new Date().toISOString();

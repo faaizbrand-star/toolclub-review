@@ -65,3 +65,16 @@ export function compareByDateDescending<
   const createdB = b.createdAt ? Date.parse(b.createdAt) : 0;
   return (isNaN(createdB) ? 0 : createdB) - (isNaN(createdA) ? 0 : createdA);
 }
+
+/**
+ * Returns today's dynamic date in standard readable format: "Month Day, Year"
+ * (e.g. "September 26, 2026")
+ */
+export function getTodayFormattedDate(): string {
+  const now = new Date();
+  return now.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}

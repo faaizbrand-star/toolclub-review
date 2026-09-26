@@ -18,6 +18,7 @@ import {
   RefreshCw,
   ExternalLink,
   Layers,
+  Calendar,
 } from 'lucide-react';
 import { compressImageToDataUrl } from '../utils/imageCompressor';
 import {
@@ -29,7 +30,7 @@ import {
 } from '../services/firestoreService';
 import { ProofItem } from '../types';
 import { Lightbox } from '../components/Lightbox';
-import { compareByDateDescending } from '../utils/dateSorter';
+import { compareByDateDescending, getTodayFormattedDate } from '../utils/dateSorter';
 
 interface UploadPageProps {
   onNavigateHome: () => void;
@@ -53,7 +54,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
   const [serviceName, setServiceName] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [customerName, setCustomerName] = useState('');
-  const [deliveryDate, setDeliveryDate] = useState('September 24, 2026');
+  const [deliveryDate, setDeliveryDate] = useState(() => getTodayFormattedDate());
   const [notes, setNotes] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadStage, setUploadStage] = useState<'compressing' | 'saving' | 'done'>('compressing');
@@ -181,7 +182,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
 
       const cleanCustomerId = (customerId || `TC-${Math.floor(1000 + Math.random() * 9000)}`).trim().toUpperCase();
       const cleanService = (serviceName || 'Digital Subscription Fulfillment').trim();
-      const cleanDate = (deliveryDate || 'September 24, 2026').trim();
+      const cleanDate = (deliveryDate || getTodayFormattedDate()).trim();
       const now = new Date().toISOString();
       const proofId = `proof-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
 
@@ -238,6 +239,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
       setCustomerId('');
       setServiceName('');
       setCustomerName('');
+      setDeliveryDate(getTodayFormattedDate());
       setNotes('');
 
       setTimeout(() => {
@@ -682,16 +684,35 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
 
                 {/* Delivery Date */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1.5">
-                    Delivery Date
-                  </label>
-                  <input
-                    type="text"
-                    value={deliveryDate}
-                    onChange={(e) => setDeliveryDate(e.target.value)}
-                    placeholder="e.g. September 26, 2026"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-[#4ADE80] transition-colors"
-                  />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-300">
+                      Delivery Date (Defaults to Today)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryDate(getTodayFormattedDate())}
+                      className="text-[11px] text-[#4ADE80] hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                      title="Reset to today's live date"
+                    >
+                      <Calendar className="w-3 h-3" />
+                      <span>Set to Today</span>
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={deliveryDate}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
+                      placeholder={getTodayFormattedDate()}
+                      className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-[#4ADE80] transition-colors font-medium"
+                    />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded text-[10px] font-bold bg-[#4ADE80]/15 text-[#4ADE80] border border-[#4ADE80]/30 pointer-events-none">
+                      Editable
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    آج کی لائیو ڈیٹ خود بخود سلیکٹ ہے۔ اگر آپ پرانی یا کوئی اور تاریخ لکھنا چاہیں تو ایڈٹ کر سکتے ہیں۔
+                  </p>
                 </div>
 
                 {/* Delivery Notes */}
