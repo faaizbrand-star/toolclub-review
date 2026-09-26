@@ -2,10 +2,9 @@ import React from 'react';
 
 interface NavbarProps {
   onNavigateHome: () => void;
-  onNavigateAdmin?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, onNavigateAdmin }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onNavigateHome }) => {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -30,20 +29,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onNavigateHome, onNavigateAdmin 
           </div>
         </button>
 
-        {/* Right Action / Admin Navigation */}
-        <div className="flex items-center gap-3">
-          {onNavigateAdmin && (
-            <button
-              onClick={onNavigateAdmin}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:border-[#4ADE80] text-slate-300 hover:text-[#4ADE80] text-xs font-bold transition-all cursor-pointer shadow-sm"
-              title="Admin Upload & Management Portal"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span>Admin Panel</span>
-            </button>
-          )}
+        {/* Live Status Badge */}
+        <div className="flex items-center gap-2 text-xs text-slate-400">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[#4ADE80] font-semibold text-[11px]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] animate-pulse"></span>
+            Live Updates
+          </span>
         </div>
       </div>
     </header>

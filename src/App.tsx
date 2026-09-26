@@ -88,7 +88,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-900 text-slate-100 font-sans">
-      <Navbar onNavigateHome={handleNavigateHome} onNavigateAdmin={handleNavigateToAdmin} />
+      <Navbar onNavigateHome={handleNavigateHome} />
 
       <main className="flex-1">
         {route.type === 'home' && (
