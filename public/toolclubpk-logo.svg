@@ -1,0 +1,254 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 650" width="100%" height="100%">
+  <defs>
+    <!-- Background Outer Radial Shadow -->
+    <radialGradient id="outerVignette" cx="50%" cy="50%" r="50%">
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="98%" stop-color="#000000" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.4" />
+    </radialGradient>
+
+    <!-- Carbon Fiber Disc Background Gradient (Matches user image exactly) -->
+    <radialGradient id="carbonBgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#2c3038" />
+      <stop offset="45%" stop-color="#16181d" />
+      <stop offset="80%" stop-color="#0e1014" />
+      <stop offset="100%" stop-color="#060709" />
+    </radialGradient>
+
+    <!-- Diagonal Carbon Fiber Textured Twill Pattern (Exact 45-degree angle in user's image) -->
+    <pattern id="diagonalCarbonTwill" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="14" height="14" fill="#121418" />
+      <rect x="0" y="0" width="7" height="7" fill="#22262e" />
+      <rect x="7" y="7" width="7" height="7" fill="#22262e" />
+      <line x1="0" y1="0" x2="14" y2="0" stroke="#2d333e" stroke-width="1.2" opacity="0.6" />
+      <line x1="0" y1="7" x2="14" y2="7" stroke="#090a0d" stroke-width="1.2" opacity="0.8" />
+      <line x1="0" y1="14" x2="14" y2="14" stroke="#2d333e" stroke-width="1.2" opacity="0.6" />
+    </pattern>
+
+    <!-- Deep Red Gradient for the Top-Right Ring Arc -->
+    <linearGradient id="topRightRedArc" x1="0%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#e02424" />
+      <stop offset="40%" stop-color="#b91c1c" />
+      <stop offset="85%" stop-color="#7f1d1d" />
+      <stop offset="100%" stop-color="#450a0a" />
+    </linearGradient>
+
+    <!-- Pakistani Emerald Green for the Bottom-Right Arc (User's logo has green on bottom-right/bottom) -->
+    <linearGradient id="bottomGreenArc" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#16a34a" />
+      <stop offset="50%" stop-color="#22c55e" />
+      <stop offset="100%" stop-color="#15803d" />
+    </linearGradient>
+
+    <!-- Dark Matte Grey/Black Segments for the remaining outer circle arcs -->
+    <linearGradient id="darkBezelSegment" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1f242d" />
+      <stop offset="100%" stop-color="#0b0d10" />
+    </linearGradient>
+
+    <!-- Outer Fine Silver Rim -->
+    <linearGradient id="silverRim" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="30%" stop-color="#cbd5e1" />
+      <stop offset="50%" stop-color="#f8fafc" />
+      <stop offset="70%" stop-color="#94a3b8" />
+      <stop offset="100%" stop-color="#e2e8f0" />
+    </linearGradient>
+
+    <!-- Metallic Brushed Chrome Gradient for 'T' & 'C' -->
+    <linearGradient id="tcSilverMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="22%" stop-color="#e2e8f0" />
+      <stop offset="45%" stop-color="#94a3b8" />
+      <stop offset="55%" stop-color="#cbd5e1" />
+      <stop offset="75%" stop-color="#64748b" />
+      <stop offset="100%" stop-color="#475569" />
+    </linearGradient>
+
+    <!-- 3D Bevel Highlight Gradient for TC Top Edges -->
+    <linearGradient id="tcTopBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#94a3b8" stop-opacity="0.2" />
+    </linearGradient>
+
+    <!-- Crimson 3D Metallic Gradient for 'P' & 'K' -->
+    <linearGradient id="pkCrimsonMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff3b3b" />
+      <stop offset="25%" stop-color="#dc2626" />
+      <stop offset="50%" stop-color="#b91c1c" />
+      <stop offset="80%" stop-color="#7f1d1d" />
+      <stop offset="100%" stop-color="#450a0a" />
+    </linearGradient>
+
+    <!-- Red Bevel Highlight for PK Lettering -->
+    <linearGradient id="pkTopBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffa5a5" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#b91c1c" stop-opacity="0.1" />
+    </linearGradient>
+
+    <!-- Drop Shadows matching exact image depth -->
+    <filter id="logoShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#000000" flood-opacity="0.95" />
+    </filter>
+    <filter id="letterDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000000" flood-opacity="0.95" />
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000000" flood-opacity="0.8" />
+    </filter>
+
+    <!-- Lens Flare / Glow Filter for the Central Red Wrench and Sparkles -->
+    <filter id="redGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Linear Flare Streaks across the emblem (Exact as in user's image) -->
+    <linearGradient id="flareStreak" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="48%" stop-color="#ffffff" stop-opacity="0.1" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.85" />
+      <stop offset="52%" stop-color="#ffffff" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="redFlareStreak" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff0000" stop-opacity="0" />
+      <stop offset="50%" stop-color="#ff3b3b" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#ff0000" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Solid White Circular Canvas as in User's Avatar Upload -->
+  <circle cx="325" cy="325" r="322" fill="#ffffff" />
+  <circle cx="325" cy="325" r="320" fill="url(#outerVignette)" />
+  <circle cx="325" cy="325" r="316" fill="none" stroke="#262626" stroke-width="2" />
+
+  <!-- Outer Track Ring (Segmented Wheel) -->
+  <!-- Top-Right Red Segment (From ~350 deg to ~65 deg) -->
+  <path d="M 340 50 A 260 260 0 0 1 570 200" fill="none" stroke="url(#topRightRedArc)" stroke-width="28" stroke-linecap="butt" />
+  
+  <!-- Right-Bottom segment gap and connection -->
+  <path d="M 570 200 L 590 208" stroke="#ffffff" stroke-width="6" />
+
+  <!-- Bottom Green Segment (From ~100 deg to ~165 deg on bottom-right/bottom) -->
+  <path d="M 575 365 A 260 260 0 0 1 340 595" fill="none" stroke="url(#bottomGreenArc)" stroke-width="28" stroke-linecap="butt" />
+
+  <!-- Bottom-Left Dark Black Segment -->
+  <path d="M 310 595 A 260 260 0 0 1 80 435" fill="none" stroke="url(#darkBezelSegment)" stroke-width="28" stroke-linecap="butt" />
+
+  <!-- Left Black/Dark Arc Segment -->
+  <path d="M 68 395 A 260 260 0 0 1 80 200" fill="none" stroke="#0f1115" stroke-width="28" stroke-linecap="butt" />
+
+  <!-- Top-Left Dark Arc Segment -->
+  <path d="M 90 175 A 260 260 0 0 1 310 50" fill="none" stroke="#222730" stroke-width="28" stroke-linecap="butt" />
+
+  <!-- Speed Dash lines and Cuts across the segmented outer ring -->
+  <line x1="322" y1="36" x2="328" y2="64" stroke="#ffffff" stroke-width="5" />
+  <line x1="322" y1="581" x2="328" y2="609" stroke="#ffffff" stroke-width="5" />
+  <line x1="68" y1="395" x2="88" y2="400" stroke="#ffffff" stroke-width="5" />
+  <line x1="575" y1="365" x2="555" y2="370" stroke="#ffffff" stroke-width="5" />
+
+  <!-- Inner Silver Bezel Ring with Drop Shadow -->
+  <circle cx="325" cy="325" r="236" fill="none" stroke="url(#silverRim)" stroke-width="4.5" filter="url(#logoShadow)" />
+  <circle cx="325" cy="325" r="232" fill="none" stroke="#000000" stroke-width="2" />
+
+  <!-- Inner Deep Carbon Fiber Disc -->
+  <circle cx="325" cy="325" r="230" fill="url(#carbonBgGrad)" />
+  <circle cx="325" cy="325" r="230" fill="url(#diagonalCarbonTwill)" />
+
+  <!-- Radial Vignette shading inside the carbon disk -->
+  <circle cx="325" cy="325" r="230" fill="url(#carbonBgGrad)" opacity="0.65" />
+
+  <!-- Horizontal Lens Flare Line Passing Behind TCPK -->
+  <line x1="75" y1="290" x2="575" y2="290" stroke="url(#flareStreak)" stroke-width="1.8" />
+  <line x1="280" y1="290" x2="540" y2="290" stroke="url(#redFlareStreak)" stroke-width="2" opacity="0.7" />
+
+  <!-- Little Light Specks / Stars in the user's design -->
+  <circle cx="102" cy="138" r="2.2" fill="#ffffff" opacity="0.8" />
+  <circle cx="495" cy="85" r="2.5" fill="#ff4d4d" opacity="0.9" />
+  <circle cx="538" cy="148" r="1.8" fill="#ffffff" opacity="0.9" />
+  <circle cx="550" cy="375" r="2.5" fill="#22c55e" opacity="0.8" />
+  <circle cx="95" cy="460" r="2" fill="#ffffff" opacity="0.7" />
+  <circle cx="30" cy="375" r="2.5" fill="#ff4d4d" opacity="0.7" />
+
+  <!-- Lens Flare Sparkle (Star shape) near C and P -->
+  <path d="M 215 285 Q 225 285 225 275 Q 225 285 235 285 Q 225 285 225 295 Q 225 285 215 285 Z" fill="#ffffff" opacity="0.8" />
+  <path d="M 445 290 Q 455 290 455 280 Q 455 290 465 290 Q 455 290 455 300 Q 455 290 445 290 Z" fill="#ffffff" opacity="0.9" />
+
+  <!-- MAIN 3D LOGO: TCPK Letters Group -->
+  <g id="TCPK-Main-Emblem" filter="url(#letterDropShadow)">
+    
+    <!-- 1. LETTER "T" (Metallic Brushed Silver) -->
+    <!-- Drop Shadow / Extrusion Underlayer -->
+    <path d="M 72 225 L 222 225 L 228 256 L 174 256 L 146 362 L 104 362 L 134 256 L 66 256 Z" fill="#000000" transform="translate(0, 5)" opacity="0.7" />
+    
+    <!-- Main Letter T Body -->
+    <path d="M 72 225 L 222 225 L 228 256 L 174 256 L 146 362 L 104 362 L 134 256 L 66 256 Z" 
+          fill="url(#tcSilverMetallic)" stroke="#94a3b8" stroke-width="1.2" stroke-linejoin="miter" />
+    <!-- Bevel highlight on T Top Roof -->
+    <polygon points="72,225 222,225 216,233 78,233" fill="url(#tcTopBevel)" />
+    <!-- Bevel highlight on T Left Wing -->
+    <polygon points="72,225 78,233 72,256 66,256" fill="#cbd5e1" opacity="0.6" />
+
+    <!-- 2. LETTER "C" (Metallic Brushed Silver, Sleek Curved Geometry) -->
+    <!-- Extrusion shadow -->
+    <path d="M 334 234 C 298 214 228 220 206 288 C 196 332 224 362 284 362 C 326 362 344 345 348 330 L 305 330 C 300 338 288 342 272 342 C 242 342 230 324 236 298 C 242 272 262 248 298 248 C 316 248 328 252 334 262 Z" 
+          fill="#000000" transform="translate(0, 5)" opacity="0.7" />
+    
+    <!-- Main Letter C Body -->
+    <path d="M 334 234 C 298 214 228 220 206 288 C 196 332 224 362 284 362 C 326 362 344 345 348 330 L 305 330 C 300 338 288 342 272 342 C 242 342 230 324 236 298 C 242 272 262 248 298 248 C 316 248 328 252 334 262 Z" 
+          fill="url(#tcSilverMetallic)" stroke="#94a3b8" stroke-width="1.2" stroke-linejoin="miter" />
+    <!-- Specular Curvature Highlight on C -->
+    <path d="M 330 238 C 295 220 236 226 216 280" fill="none" stroke="#ffffff" stroke-width="2.5" opacity="0.85" stroke-linecap="round" />
+
+    <!-- 3. RED WRENCH ICON (Between C and P - Exact Position and Silhouette) -->
+    <g id="Center-Wrench-Tool" transform="translate(306, 252) scale(1.15)" filter="url(#redGlow)">
+      <!-- Wrench head -->
+      <path d="M 23 2 C 12 2 3 9 1 18 L 13 24 C 14 20 18 17 22 17 C 27 17 31 21 31 26 C 31 30 28 33 23 35 L 34 46 C 43 41 47 31 45 21 C 43 10 34 2 23 2 Z" 
+            fill="url(#pkCrimsonMetallic)" stroke="#ff7878" stroke-width="1.2" />
+      <!-- Wrench handle -->
+      <path d="M 22 37 L 5 54 C 3 56 3 60 5 62 L 9 66 C 11 68 15 68 17 66 L 34 49 Z" 
+            fill="url(#pkCrimsonMetallic)" stroke="#ef4444" stroke-width="0.8" />
+      <!-- Specular glint on wrench jaw -->
+      <path d="M 23 4 L 32 13" stroke="#ffffff" stroke-width="1.8" opacity="0.9" stroke-linecap="round" />
+    </g>
+
+    <!-- 4. LETTER "P" (Metallic Crimson Red) -->
+    <!-- Extrusion Shadow -->
+    <path d="M 346 225 L 434 225 C 472 225 490 242 485 275 C 480 306 454 324 418 324 L 388 324 L 376 362 L 342 362 Z M 386 298 L 412 298 C 432 298 448 290 452 276 C 455 264 446 252 428 252 L 398 252 Z" 
+          fill="#000000" transform="translate(0, 5)" opacity="0.7" />
+    
+    <!-- Main Letter P Body -->
+    <path d="M 346 225 L 434 225 C 472 225 490 242 485 275 C 480 306 454 324 418 324 L 388 324 L 376 362 L 342 362 Z M 386 298 L 412 298 C 432 298 448 290 452 276 C 455 264 446 252 428 252 L 398 252 Z" 
+          fill="url(#pkCrimsonMetallic)" stroke="#ff4a4a" stroke-width="1.2" stroke-linejoin="miter" />
+    <!-- Bevel highlight on P Top -->
+    <polygon points="346,225 434,225 426,233 352,233" fill="url(#pkTopBevel)" />
+    <!-- Inner P Hole Outline Stroke -->
+    <path d="M 386 298 L 412 298 C 432 298 448 290 452 276 C 455 264 446 252 428 252 L 398 252 Z" fill="none" stroke="#7f1d1d" stroke-width="1" />
+
+    <!-- 5. LETTER "K" (Metallic Crimson Red with Angular Dynamic Cuts) -->
+    <!-- Extrusion Shadow -->
+    <path d="M 470 225 L 504 225 L 485 296 L 560 225 L 602 225 L 518 304 L 582 362 L 538 362 L 492 316 L 478 362 L 444 362 Z" 
+          fill="#000000" transform="translate(0, 5)" opacity="0.7" />
+    
+    <!-- Main Letter K Body -->
+    <path d="M 470 225 L 504 225 L 485 296 L 560 225 L 602 225 L 518 304 L 582 362 L 538 362 L 492 316 L 478 362 L 444 362 Z" 
+          fill="url(#pkCrimsonMetallic)" stroke="#ff4a4a" stroke-width="1.2" stroke-linejoin="miter" />
+    <!-- Bevel highlight on K Top Left -->
+    <polygon points="470,225 504,225 500,233 474,233" fill="url(#pkTopBevel)" />
+    <polygon points="560,225 602,225 592,233 554,233" fill="url(#pkTopBevel)" />
+  </g>
+
+  <!-- TEXT: "Toolclubpk" Below TCPK (Matches Font, Italics, and Red "pk") -->
+  <g id="Toolclubpk-Subtitle" transform="translate(325, 432)" text-anchor="middle" filter="url(#letterDropShadow)">
+    <text font-family="'Montserrat', 'Arial Black', sans-serif" font-weight="900" font-style="italic" font-size="44" letter-spacing="1">
+      <tspan fill="#f1f5f9">Toolclub</tspan><tspan fill="#e02424" filter="url(#redGlow)">pk</tspan>
+    </text>
+
+    <!-- Metallic Underline with Red Accent on the Right -->
+    <line x1="-165" y1="16" x2="165" y2="16" stroke="#4b5563" stroke-width="2.5" stroke-linecap="round" />
+    <line x1="-40" y1="16" x2="75" y2="16" stroke="#e02424" stroke-width="4.5" stroke-linecap="round" filter="url(#redGlow)" />
+  </g>
+</svg>

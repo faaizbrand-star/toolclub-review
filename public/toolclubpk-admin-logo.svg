@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 90" width="100%" height="100%" fill="none">
+  <defs>
+    <!-- Background Glow Filter -->
+    <radialGradient id="adminEmblemAura" cx="45" cy="45" r="45" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#3b82f6" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Deep Carbon Disc Radial Gradient -->
+    <radialGradient id="adminHeadCarbonBg" cx="45" cy="45" r="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2a2e37"/>
+      <stop offset="50%" stop-color="#14171d"/>
+      <stop offset="85%" stop-color="#0a0c10"/>
+      <stop offset="100%" stop-color="#030406"/>
+    </radialGradient>
+
+    <pattern id="adminHeadCarbonMesh" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="6" height="6" fill="#12151b"/>
+      <rect x="0" y="0" width="3" height="3" fill="#20252e"/>
+      <rect x="3" y="3" width="3" height="3" fill="#20252e"/>
+      <line x1="0" y1="0" x2="6" y2="0" stroke="#2b313d" stroke-width="0.75" opacity="0.6"/>
+      <line x1="0" y1="3" x2="6" y2="3" stroke="#08090c" stroke-width="0.75" opacity="0.8"/>
+    </pattern>
+
+    <linearGradient id="adminChromeRim" x1="10" y1="10" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="25%" stop-color="#cbd5e1"/>
+      <stop offset="48%" stop-color="#64748b"/>
+      <stop offset="65%" stop-color="#ffffff"/>
+      <stop offset="85%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#94a3b8"/>
+    </linearGradient>
+
+    <linearGradient id="adminRedArc" x1="45" y1="10" x2="80" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ff4a4a"/>
+      <stop offset="35%" stop-color="#ef1535"/>
+      <stop offset="80%" stop-color="#b91c1c"/>
+      <stop offset="100%" stop-color="#7f1d1d"/>
+    </linearGradient>
+
+    <linearGradient id="adminGreenArc" x1="80" y1="55" x2="45" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="45%" stop-color="#22c55e"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+
+    <linearGradient id="adminTcMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="20%" stop-color="#e2e8f0"/>
+      <stop offset="50%" stop-color="#94a3b8"/>
+      <stop offset="70%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+
+    <linearGradient id="adminPkMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff5252"/>
+      <stop offset="30%" stop-color="#ef1535"/>
+      <stop offset="70%" stop-color="#b91c1c"/>
+      <stop offset="100%" stop-color="#550b0b"/>
+    </linearGradient>
+
+    <linearGradient id="adminTextChrome" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="40%" stop-color="#f8fafc"/>
+      <stop offset="80%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+
+    <linearGradient id="adminPkTitle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff5c5c"/>
+      <stop offset="50%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+
+    <linearGradient id="adminPillGlassBg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2d1217" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#1c1924" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#0f1217" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <linearGradient id="adminPillBorder" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#64748b" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.4"/>
+    </linearGradient>
+
+    <linearGradient id="adminGlassReflection" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.45"/>
+      <stop offset="35%" stop-color="#ffffff" stop-opacity="0.08"/>
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <filter id="adminEmblemShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.8"/>
+    </filter>
+    <filter id="adminGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- ==================== LEFT EMBLEM BADGE ==================== -->
+  <g transform="translate(2, 0)">
+    <circle cx="45" cy="45" r="43" fill="url(#adminEmblemAura)"/>
+    <circle cx="45" cy="45" r="41" fill="none" stroke="url(#adminChromeRim)" stroke-width="2.5" filter="url(#adminEmblemShadow)"/>
+
+    <path d="M 46 7 A 38 38 0 0 1 81 29" fill="none" stroke="url(#adminRedArc)" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M 81 60 A 38 38 0 0 1 47 83" fill="none" stroke="url(#adminGreenArc)" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M 12 55 A 38 38 0 0 1 12 35" fill="none" stroke="#2a303c" stroke-width="4" stroke-linecap="round"/>
+
+    <circle cx="45" cy="45" r="33" fill="url(#adminHeadCarbonBg)"/>
+    <circle cx="45" cy="45" r="33" fill="url(#adminHeadCarbonMesh)"/>
+    <circle cx="45" cy="45" r="33" fill="none" stroke="#374151" stroke-width="1.2"/>
+    <circle cx="45" cy="45" r="32" fill="none" stroke="#000000" stroke-width="1" opacity="0.8"/>
+
+    <line x1="14" y1="43" x2="76" y2="43" stroke="#ffffff" stroke-width="0.75" opacity="0.3"/>
+
+    <g transform="translate(13, 30) scale(0.14)" filter="url(#adminGlow)">
+      <path d="M 72 225 L 222 225 L 228 256 L 174 256 L 146 362 L 104 362 L 134 256 L 66 256 Z" fill="url(#adminTcMetallic)" stroke="#e2e8f0" stroke-width="2"/>
+      <path d="M 334 234 C 298 214 228 220 206 288 C 196 332 224 362 284 362 C 326 362 344 345 348 330 L 305 330 C 300 338 288 342 272 342 C 242 342 230 324 236 298 C 242 272 262 248 298 248 C 316 248 328 252 334 262 Z" fill="url(#adminTcMetallic)" stroke="#e2e8f0" stroke-width="2"/>
+      <g transform="translate(306, 252) scale(1.15)">
+        <path d="M 23 2 C 12 2 3 9 1 18 L 13 24 C 14 20 18 17 22 17 C 27 17 31 21 31 26 C 31 30 28 33 23 35 L 34 46 C 43 41 47 31 45 21 C 43 10 34 2 23 2 Z" fill="url(#adminPkMetallic)" stroke="#ff7878" stroke-width="1.5"/>
+        <path d="M 22 37 L 5 54 C 3 56 3 60 5 62 L 9 66 C 11 68 15 68 17 66 L 34 49 Z" fill="url(#adminPkMetallic)" stroke="#ef4444" stroke-width="1"/>
+      </g>
+      <path d="M 346 225 L 434 225 C 472 225 490 242 485 275 C 480 306 454 324 418 324 L 388 324 L 376 362 L 342 362 Z M 386 298 L 412 298 C 432 298 448 290 452 276 C 455 264 446 252 428 252 L 398 252 Z" fill="url(#adminPkMetallic)" stroke="#ff4a4a" stroke-width="2"/>
+      <path d="M 470 225 L 504 225 L 485 296 L 560 225 L 602 225 L 518 304 L 582 362 L 538 362 L 492 316 L 478 362 L 444 362 Z" fill="url(#adminPkMetallic)" stroke="#ff4a4a" stroke-width="2"/>
+    </g>
+
+    <path d="M 20 28 C 35 15 55 15 70 28 C 65 37 48 42 20 28 Z" fill="url(#adminGlassReflection)" pointer-events="none"/>
+  </g>
+
+  <!-- ==================== RIGHT BRAND TYPOGRAPHY ==================== -->
+  <g transform="translate(104, 14)">
+    <g id="brandTitle">
+      <text x="0" y="32" font-family="'Montserrat', 'Inter', -apple-system, sans-serif" font-weight="900" font-style="italic" font-size="34" letter-spacing="-0.5">
+        <tspan fill="url(#adminTextChrome)" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))">Toolclub</tspan><tspan fill="url(#adminPkTitle)" filter="url(#adminGlow)">pk</tspan>
+      </text>
+    </g>
+
+    <!-- Subtitle Pill: ADMIN CONSOLE -->
+    <g transform="translate(0, 42)">
+      <rect x="0" y="0" width="220" height="23" rx="7" fill="url(#adminPillGlassBg)" stroke="url(#adminPillBorder)" stroke-width="1.2" filter="drop-shadow(0 2px 5px rgba(0,0,0,0.5))"/>
+
+      <circle cx="12" cy="11.5" r="3.5" fill="#ef4444" filter="url(#adminGlow)"/>
+      <circle cx="12" cy="11.5" r="1.5" fill="#ffffff"/>
+
+      <text x="24" y="15" font-family="'Montserrat', 'Inter', sans-serif" font-weight="800" font-size="10.5" letter-spacing="1.5" fill="#fca5a5">
+        ADMIN CONSOLE
+      </text>
+
+      <g transform="translate(150, 4)">
+        <rect x="0" y="0" width="62" height="15" rx="4" fill="#450a0a" stroke="#dc2626" stroke-width="0.8"/>
+        <text x="31" y="11" font-family="'Montserrat', sans-serif" font-weight="800" font-size="8.5" letter-spacing="0.5" fill="#f87171" text-anchor="middle">
+          MANAGER
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

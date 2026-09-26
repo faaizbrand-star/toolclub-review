@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix DeliverProof - Customer Delivery Verification Portal",
+  "description": "A secure, modern customer delivery proof portal for uploading and verifying delivery screenshots, order details, and completion certificates.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

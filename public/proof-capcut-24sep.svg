@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1440" viewBox="0 0 720 1440">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b141b"/>
+      <stop offset="100%" stop-color="#070c10"/>
+    </linearGradient>
+    <filter id="shadow2" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background Wallpaper -->
+  <rect width="720" height="1440" fill="url(#bg2)"/>
+
+  <!-- Top App Bar -->
+  <rect width="720" height="110" fill="#121b22"/>
+  <path d="M48 55 L28 55 M38 45 L28 55 L38 65" stroke="#e9edef" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Profile Avatar -->
+  <circle cx="95" cy="55" r="26" fill="#202c33"/>
+  <circle cx="95" cy="48" r="10" fill="#8696a0"/>
+  <path d="M78 68 C80 60 110 60 112 68" fill="#8696a0"/>
+  
+  <!-- Contact Name & Privacy-Protected Number Badge -->
+  <text x="135" y="50" fill="#e9edef" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="700" font-size="21">Verified Customer</text>
+  <rect x="135" y="62" width="180" height="20" rx="5" fill="#1f2c34" stroke="#2a3942" stroke-width="1"/>
+  <text x="145" y="76" fill="#4ade80" font-family="sans-serif" font-weight="bold" font-size="11">🔒 NUMBER PROTECTED</text>
+  
+  <!-- 23h Badge & Menu Icons -->
+  <rect x="525" y="38" width="85" height="34" rx="17" fill="#202c33"/>
+  <text x="560" y="61" fill="#8696a0" font-family="sans-serif" font-size="16">⏳ 23h</text>
+  
+  <circle cx="670" cy="45" r="3.5" fill="#8696a0"/>
+  <circle cx="670" cy="55" r="3.5" fill="#8696a0"/>
+  <circle cx="670" cy="65" r="3.5" fill="#8696a0"/>
+
+  <!-- Outgoing Instructions Msg: One Device Login Only -->
+  <g filter="url(#shadow2)">
+    <rect x="230" y="135" width="460" height="140" rx="16" fill="#182229"/>
+    <text x="250" y="165" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="16">One Device Login Only</text>
+    <text x="250" y="192" fill="#d1d5db" font-family="sans-serif" font-size="14">Please use the account on one device at a time.</text>
+    <text x="250" y="214" fill="#d1d5db" font-family="sans-serif" font-size="14">Do not change the account details or password.</text>
+    <text x="250" y="236" fill="#d1d5db" font-family="sans-serif" font-size="14">Please keep the login information secure.</text>
+    
+    <text x="250" y="262" fill="#4ade80" font-family="sans-serif" font-weight="bold" font-size="15">✅ Subscription: 12 Months</text>
+    <text x="635" y="262" fill="#8696a0" font-family="sans-serif" font-size="12">8:25 PM ✓</text>
+  </g>
+
+  <!-- Audio Voice Note Message -->
+  <g filter="url(#shadow2)">
+    <rect x="30" y="295" width="480" height="75" rx="16" fill="#9de622"/>
+    <!-- Play button -->
+    <path d="M60 322 L75 332 L60 342 Z" fill="#0f172a"/>
+    <!-- Progress bar -->
+    <line x1="90" y1="332" x2="430" y2="332" stroke="#2d420c" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="120" cy="332" r="7" fill="#0284c7"/>
+    <!-- Timer & Orange Headset Icon -->
+    <text x="90" y="354" fill="#2d420c" font-family="sans-serif" font-size="12">0:00</text>
+    <text x="360" y="354" fill="#2d420c" font-family="sans-serif" font-size="12">8:25 PM</text>
+    <circle cx="455" cy="332" r="22" fill="#f97316"/>
+    <text x="447" y="338" fill="#ffffff" font-family="sans-serif" font-size="16">🎧</text>
+  </g>
+
+  <!-- Incoming Msg: Okk -->
+  <rect x="560" y="390" width="130" height="48" rx="12" fill="#182229" filter="url(#shadow2)"/>
+  <text x="580" y="420" fill="#e9edef" font-family="sans-serif" font-size="16">Okk</text>
+  <text x="630" y="422" fill="#8696a0" font-family="sans-serif" font-size="11">8:25 PM ✓</text>
+
+  <!-- Payment Receipt Card (PKR 1,000 via Raast / HBL) with Customer Number and details strictly hidden -->
+  <g filter="url(#shadow2)">
+    <!-- Cyan Header Notch -->
+    <path d="M40 470 C40 455, 60 455, 75 455 L455 455 C470 455, 490 455, 490 470 L490 480 L40 480 Z" fill="#0d9488"/>
+    <!-- White Card Base -->
+    <rect x="40" y="470" width="450" height="320" rx="20" fill="#ffffff"/>
+    
+    <!-- Amount Header -->
+    <text x="265" y="505" fill="#64748b" font-family="sans-serif" font-size="14" text-anchor="middle">Amount</text>
+    <text x="265" y="545" fill="#0f172a" font-family="sans-serif" font-weight="900" font-size="32" text-anchor="middle">PKR 1,000</text>
+
+    <line x1="60" y1="565" x2="470" y2="565" stroke="#f1f5f9" stroke-width="1.5" stroke-dasharray="4"/>
+
+    <!-- From row -->
+    <text x="65" y="590" fill="#64748b" font-family="sans-serif" font-size="14">From</text>
+    <text x="465" y="590" fill="#0f172a" font-family="sans-serif" font-weight="700" font-size="14" text-anchor="end">Liaqat Ali (Customer)</text>
+
+    <!-- Customer Number Row Strictly Censored / Hidden -->
+    <text x="65" y="622" fill="#64748b" font-family="sans-serif" font-size="14">Customer Number</text>
+    <rect x="330" y="608" width="135" height="20" rx="5" fill="#0d9488"/>
+    <text x="397" y="622" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="10" text-anchor="middle">🔒 NUMBER HIDDEN</text>
+
+    <!-- Receiver Name row -->
+    <text x="65" y="654" fill="#64748b" font-family="sans-serif" font-size="14">Receiver Name</text>
+    <text x="465" y="654" fill="#0f172a" font-family="sans-serif" font-weight="800" font-size="14" text-anchor="end">SAIMA SIDDIQUE</text>
+
+    <!-- Receiver Account row -->
+    <text x="65" y="686" fill="#64748b" font-family="sans-serif" font-size="14">Receiver Account/ IBAN</text>
+    <rect x="330" y="672" width="135" height="20" rx="5" fill="#64748b"/>
+    <text x="397" y="686" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="10" text-anchor="middle">🔒 IBAN PROTECTED</text>
+
+    <!-- Date & Time row -->
+    <text x="65" y="718" fill="#64748b" font-family="sans-serif" font-size="14">Date &amp; Time</text>
+    <text x="465" y="718" fill="#0f172a" font-family="sans-serif" font-weight="700" font-size="14" text-anchor="end">24 Sep 2026 | 8:28:22 PM</text>
+
+    <!-- Channel row -->
+    <text x="65" y="750" fill="#64748b" font-family="sans-serif" font-size="14">Channel</text>
+    <text x="465" y="750" fill="#0f172a" font-family="sans-serif" font-weight="700" font-size="14" text-anchor="end">via Raast</text>
+
+    <!-- Bottom HBL banner inside receipt -->
+    <rect x="40" y="765" width="450" height="50" rx="14" fill="#008375"/>
+    <text x="265" y="796" fill="#ffffff" font-family="sans-serif" font-weight="600" font-size="14" text-anchor="middle">Securely processed via | » HBL</text>
+
+    <!-- Receipt timestamp bubble -->
+    <rect x="40" y="820" width="450" height="35" rx="8" fill="#9de622"/>
+    <text x="440" y="842" fill="#2d420c" font-family="sans-serif" font-size="12" text-anchor="end">8:28 PM</text>
+  </g>
+
+  <!-- Capcut Pro Credentials Delivery Msg with Privacy Shield -->
+  <g filter="url(#shadow2)">
+    <rect x="360" y="880" width="330" height="185" rx="16" fill="#182229" stroke="#2a3942" stroke-width="1.5"/>
+    <text x="385" y="915" fill="#38bdf8" font-family="sans-serif" font-weight="bold" font-size="18">*Capcut Pro*</text>
+    
+    <text x="385" y="945" fill="#e2e8f0" font-family="sans-serif" font-size="14">Email 📨</text>
+    <!-- Privacy Protected Masked Email -->
+    <rect x="385" y="955" width="280" height="22" rx="6" fill="#0f766e"/>
+    <text x="525" y="970" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="11" text-anchor="middle">🔒 [EMAIL HIDDEN FOR SAFETY]</text>
+    
+    <text x="385" y="1005" fill="#e2e8f0" font-family="sans-serif" font-size="14">Password 🔑</text>
+    <!-- Privacy Protected Masked Password -->
+    <rect x="385" y="1015" width="280" height="22" rx="6" fill="#0f766e"/>
+    <text x="525" y="1030" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="11" text-anchor="middle">🔒 [PASSWORD PROTECTED]</text>
+    
+    <text x="625" y="1055" fill="#8696a0" font-family="sans-serif" font-size="12">8:32 PM ✓</text>
+  </g>
+
+  <!-- Bottom Chat Input Bar -->
+  <rect y="1340" width="720" height="100" fill="#0b141b"/>
+  <rect x="25" y="1355" width="580" height="60" rx="30" fill="#202c33"/>
+  <circle cx="55" cy="1385" r="14" fill="none" stroke="#8696a0" stroke-width="2.5"/>
+  <text x="90" y="1392" fill="#8696a0" font-family="sans-serif" font-size="17">Type a message or /</text>
+  <circle cx="655" cy="1385" r="28" fill="#00a884"/>
+  <path d="M650 1375 L660 1385 L650 1395" fill="none" stroke="#111b21" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

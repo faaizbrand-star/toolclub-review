@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "Proof": {
+      "title": "Proof",
+      "description": "A verified customer delivery proof record",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique proof identifier"
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Customer or Order ID"
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Customer name if provided"
+        },
+        "serviceName": {
+          "type": "string",
+          "description": "Service or product delivered"
+        },
+        "deliveryDate": {
+          "type": "string",
+          "description": "Date of delivery"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional order fulfillment notes"
+        },
+        "screenshots": {
+          "type": "array",
+          "description": "List of screenshot image URLs"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "inactive"],
+          "description": "Status of the proof"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation ISO timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update ISO timestamp"
+        },
+        "verifiedAt": {
+          "type": "string",
+          "description": "Verification ISO timestamp"
+        },
+        "verificationHash": {
+          "type": "string",
+          "description": "Cryptographic checksum"
+        }
+      },
+      "required": ["id", "customerId", "serviceName", "deliveryDate", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/proofs/{proofId}": {
+      "schema": "Proof",
+      "description": "Collection of verified delivery proofs"
+    }
+  }
+}

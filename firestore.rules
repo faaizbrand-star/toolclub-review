@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidProof(data) {
+      return data.keys().hasAll(['id', 'customerId', 'serviceName', 'deliveryDate', 'status', 'createdAt']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.customerId is string && data.customerId.size() <= 64 &&
+        data.serviceName is string && data.serviceName.size() <= 200 &&
+        data.deliveryDate is string && data.deliveryDate.size() <= 100 &&
+        (data.status == 'active' || data.status == 'inactive') &&
+        data.createdAt is string && data.createdAt.size() <= 50 &&
+        (!('screenshots' in data) || (data.screenshots is list && data.screenshots.size() <= 15));
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Proofs collection
+    match /proofs/{proofId} {
+      // Public read access for customers to verify proofs
+      allow get: if true;
+      allow list: if true;
+      
+      // Creation and updates must satisfy schema validation
+      allow create: if isValidId(proofId) && isValidProof(incoming());
+      allow update: if isValidId(proofId) && isValidProof(incoming());
+      allow delete: if isValidId(proofId);
+    }
+  }
+}
