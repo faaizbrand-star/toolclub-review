@@ -269,3 +269,51 @@ export async function deleteProofFromFirestore(proofId: string): Promise<void> {
     throw err;
   }
 }
+
+export async function deleteMultipleProofsFromFirestore(proofIds: string[]): Promise<void> {
+  if (!proofIds || proofIds.length === 0) return;
+
+  // Remove from cache immediately for 0ms UI update
+  const currentList = inMemoryProofsCache || loadLocalCache() || [];
+  const updatedList = currentList.filter((p) => !proofIds.includes(p.id));
+  updateCache(updatedList);
+
+  // Parallel delete in Firestore
+  await Promise.all(
+    proofIds.map(async (id) => {
+      try {
+        const docRef = doc(db, PROOFS_COLLECTION, id);
+        await deleteDoc(docRef);
+      } catch (err) {
+        console.error(`[Firestore] Error deleting proof ${id}:`, err);
+      }
+    })
+  );
+}
+
+export async function removeScreenshotFromProof(
+  proofId: string,
+  screenshotIndex: number
+): Promise<ProofItem | null> {
+  const currentList = inMemoryProofsCache || loadLocalCache() || [];
+  const existing = currentList.find((p) => p.id === proofId);
+  if (!existing) return null;
+
+  const newScreenshots = [...(existing.screenshots || [])];
+  newScreenshots.splice(screenshotIndex, 1);
+
+  if (newScreenshots.length === 0) {
+    // If no screenshots remain, delete the entire proof document
+    await deleteProofFromFirestore(proofId);
+    return null;
+  }
+
+  const updatedProof: ProofItem = {
+    ...existing,
+    screenshots: newScreenshots,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await saveProofToFirestore(updatedProof);
+  return updatedProof;
+}
