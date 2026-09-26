@@ -12,10 +12,10 @@ import { db } from '../firebase';
 import { ProofItem, PublicProofData } from '../types';
 
 const PROOFS_COLLECTION = 'proofs';
-const CACHE_KEY = 'toolclubpk_proofs_cache_v1';
+const CACHE_KEY = 'toolclubpk_proofs_cache_v2';
 
-// Initial sample proofs to seed into Firestore if the database is brand new
-const INITIAL_SAMPLE_PROOFS: ProofItem[] = [
+// Initial sample proofs to seed and show instantly with 0ms delay
+export const INITIAL_SAMPLE_PROOFS: ProofItem[] = [
   {
     id: 'proof-sample-nordvpn-1',
     customerId: 'TC-1025',
@@ -50,11 +50,11 @@ const INITIAL_SAMPLE_PROOFS: ProofItem[] = [
 let inMemoryProofsCache: ProofItem[] | null = null;
 let hasAttemptedSeed = false;
 
-// Load cache from sessionStorage on client
-function loadSessionCache(): ProofItem[] | null {
+// Load persistent cache from localStorage
+function loadLocalCache(): ProofItem[] | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = sessionStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(CACHE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -69,14 +69,13 @@ function updateCache(proofs: ProofItem[]) {
   inMemoryProofsCache = proofs;
   if (typeof window !== 'undefined') {
     try {
-      sessionStorage.setItem(CACHE_KEY, JSON.stringify(proofs));
+      localStorage.setItem(CACHE_KEY, JSON.stringify(proofs));
     } catch {}
   }
 }
 
-export function getCachedProofsInstant(): PublicProofData[] | null {
-  const cached = inMemoryProofsCache || loadSessionCache();
-  if (!cached || cached.length === 0) return null;
+export function getCachedProofsInstant(): PublicProofData[] {
+  const cached = inMemoryProofsCache || loadLocalCache() || INITIAL_SAMPLE_PROOFS;
   return cached
     .filter((p) => p.status === 'active')
     .map((p) => ({
@@ -126,7 +125,7 @@ export async function getProofsFromFirestore(): Promise<ProofItem[]> {
   } catch (err) {
     console.error('[Firestore] Error fetching proofs:', err);
     // If offline or network error, return cache if available
-    const cached = inMemoryProofsCache || loadSessionCache();
+    const cached = inMemoryProofsCache || loadLocalCache();
     if (cached && cached.length > 0) {
       return cached;
     }
@@ -152,9 +151,7 @@ export async function getActivePublicProofsFromFirestore(): Promise<PublicProofD
       }));
   } catch (err) {
     console.error('[Firestore] Error fetching public proofs:', err);
-    const cached = getCachedProofsInstant();
-    if (cached) return cached;
-    return [];
+    return getCachedProofsInstant();
   }
 }
 
@@ -164,7 +161,7 @@ export async function getProofByCustomerIdFromFirestore(
   const cleanId = customerId.trim().toUpperCase();
 
   // Instant check from cache
-  const cached = inMemoryProofsCache || loadSessionCache();
+  const cached = inMemoryProofsCache || loadLocalCache();
   if (cached) {
     const found = cached.find((p) => p.customerId.toUpperCase() === cleanId || p.id === customerId);
     if (found) return found;
@@ -214,8 +211,8 @@ export async function saveProofToFirestore(proof: ProofItem): Promise<void> {
       Math.random().toString(36).substring(2) + Date.now().toString(36),
   };
 
-  // Instantly push to in-memory & session cache so UI renders with 0ms delay!
-  const currentList = inMemoryProofsCache || loadSessionCache() || [];
+  // Instantly push to in-memory & local persistent cache so UI renders with 0ms delay!
+  const currentList = inMemoryProofsCache || loadLocalCache() || [];
   const existingIdx = currentList.findIndex((p) => p.id === cleanId || p.customerId === cleanProof.customerId);
   let updatedList: ProofItem[];
   if (existingIdx >= 0) {
@@ -259,7 +256,7 @@ export async function saveProofToFirestore(proof: ProofItem): Promise<void> {
 
 export async function deleteProofFromFirestore(proofId: string): Promise<void> {
   // Remove from cache immediately
-  const currentList = inMemoryProofsCache || loadSessionCache() || [];
+  const currentList = inMemoryProofsCache || loadLocalCache() || [];
   const updatedList = currentList.filter((p) => p.id !== proofId);
   updateCache(updatedList);
 

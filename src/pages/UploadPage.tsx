@@ -120,7 +120,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
     try {
       // 1. Parallel ultra-fast compression: all images processed simultaneously in parallel
       const compressedUrls = await Promise.all(
-        files.map((file) => compressImageToDataUrl(file, 1080, 0.78))
+        files.map((file) => compressImageToDataUrl(file, 760, 0.70))
       );
 
       const cleanCustomerId = (customerId || `TC-${Math.floor(1000 + Math.random() * 9000)}`).trim().toUpperCase();
@@ -146,7 +146,13 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
 
       // 2. Save directly to Cloud Firestore & Instant Local Cache
       setUploadStage('saving');
-      await saveProofToFirestore(newProofItem);
+      
+      // Save to Firestore (updates instant local cache immediately, network syncs in background)
+      const firestoreSave = saveProofToFirestore(newProofItem);
+      await Promise.race([
+        firestoreSave,
+        new Promise((resolve) => setTimeout(resolve, 600)),
+      ]);
 
       // 3. Asynchronously sync to backend in background (non-blocking)
       if (adminToken) {
@@ -173,7 +179,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
       // Instant transition! Show immediately in gallery
       setTimeout(() => {
         onNavigateHome();
-      }, 400);
+      }, 300);
     } catch (err: any) {
       console.error('Error saving proof to Firestore:', err);
       setError(err.message || 'Error uploading screenshot to cloud database.');

@@ -4,8 +4,8 @@
  */
 export async function compressImageToDataUrl(
   file: File,
-  maxDimension = 1080,
-  quality = 0.78
+  maxDimension = 760,
+  quality = 0.70
 ): Promise<string> {
   // If SVG or tiny image, read as data URL directly
   if (file.type === 'image/svg+xml' || file.name.endsWith('.svg') || file.size < 40 * 1024) {

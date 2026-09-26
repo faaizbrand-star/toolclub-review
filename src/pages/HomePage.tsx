@@ -45,8 +45,8 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = () => {
   const initialCache = getCachedProofsInstant();
-  const [proofs, setProofs] = useState<PublicProofData[]>(() => initialCache || []);
-  const [loading, setLoading] = useState<boolean>(() => !initialCache || initialCache.length === 0);
+  const [proofs, setProofs] = useState<PublicProofData[]>(() => initialCache);
+  const [loading, setLoading] = useState<boolean>(false);
 
   // Filter state (optional quick filter inside the single gallery)
   const [selectedService, setSelectedService] = useState<string>('all');
@@ -58,32 +58,29 @@ export const HomePage: React.FC<HomePageProps> = () => {
   const [lightboxTitle, setLightboxTitle] = useState('');
 
   const loadProofs = async () => {
-    // Only show full loading spinner if we don't have any cached proofs yet
-    if (!initialCache || initialCache.length === 0) {
-      setLoading(true);
-    }
     try {
-      // 1. Try directly reading from Google Cloud Firestore
+      // 1. Try directly reading from Google Cloud Firestore in the background
       const firestoreProofs = await getActivePublicProofsFromFirestore();
       if (firestoreProofs && firestoreProofs.length > 0) {
         setProofs(firestoreProofs);
-        setLoading(false);
         return;
       }
 
       // 2. Fallback to API if Firestore is empty
       const data = await api.getPublicProofs();
-      setProofs(data);
+      if (data && data.length > 0) {
+        setProofs(data);
+      }
     } catch (err) {
       console.error('Failed to load proofs from Firestore, trying API fallback:', err);
       try {
         const data = await api.getPublicProofs();
-        setProofs(data);
+        if (data && data.length > 0) {
+          setProofs(data);
+        }
       } catch (fallbackErr) {
         console.error('All proof fetch strategies failed:', fallbackErr);
       }
-    } finally {
-      setLoading(false);
     }
   };
 
