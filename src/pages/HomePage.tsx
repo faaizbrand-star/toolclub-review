@@ -19,7 +19,10 @@ import {
   ShoppingCart,
 } from 'lucide-react';
 import { api } from '../services/api';
-import { getActivePublicProofsFromFirestore } from '../services/firestoreService';
+import {
+  getActivePublicProofsFromFirestore,
+  getCachedProofsInstant,
+} from '../services/firestoreService';
 import { PublicProofData } from '../types';
 import { Lightbox } from '../components/Lightbox';
 
@@ -41,8 +44,9 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = () => {
-  const [proofs, setProofs] = useState<PublicProofData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initialCache = getCachedProofsInstant();
+  const [proofs, setProofs] = useState<PublicProofData[]>(() => initialCache || []);
+  const [loading, setLoading] = useState<boolean>(() => !initialCache || initialCache.length === 0);
 
   // Filter state (optional quick filter inside the single gallery)
   const [selectedService, setSelectedService] = useState<string>('all');
@@ -54,7 +58,10 @@ export const HomePage: React.FC<HomePageProps> = () => {
   const [lightboxTitle, setLightboxTitle] = useState('');
 
   const loadProofs = async () => {
-    setLoading(true);
+    // Only show full loading spinner if we don't have any cached proofs yet
+    if (!initialCache || initialCache.length === 0) {
+      setLoading(true);
+    }
     try {
       // 1. Try directly reading from Google Cloud Firestore
       const firestoreProofs = await getActivePublicProofsFromFirestore();

@@ -39,6 +39,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
   const [deliveryDate, setDeliveryDate] = useState('September 24, 2026');
   const [notes, setNotes] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadStage, setUploadStage] = useState<'compressing' | 'saving' | 'done'>('compressing');
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
@@ -113,15 +114,14 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
     }
 
     setUploading(true);
+    setUploadStage('compressing');
     setError('');
 
     try {
-      // 1. Compress screenshots to high-clarity, web-optimized Data URLs for permanent Cloud Firestore storage
-      const compressedUrls: string[] = [];
-      for (const file of files) {
-        const compressed = await compressImageToDataUrl(file);
-        compressedUrls.push(compressed);
-      }
+      // 1. Parallel ultra-fast compression: all images processed simultaneously in parallel
+      const compressedUrls = await Promise.all(
+        files.map((file) => compressImageToDataUrl(file, 1080, 0.78))
+      );
 
       const cleanCustomerId = (customerId || `TC-${Math.floor(1000 + Math.random() * 9000)}`).trim().toUpperCase();
       const cleanService = (serviceName || 'Digital Subscription Fulfillment').trim();
@@ -136,7 +136,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
         serviceName: cleanService,
         deliveryDate: cleanDate,
         notes: notes.trim() ? notes.trim() : undefined,
-        screenshots: compressedUrls,
+        screenshots: compressedUrls.filter(Boolean),
         status: 'active',
         createdAt: now,
         updatedAt: now,
@@ -144,37 +144,36 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
         verificationHash: `vh_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`,
       };
 
-      // 2. Save directly to Cloud Firestore (Permanent Google Cloud Database)
+      // 2. Save directly to Cloud Firestore & Instant Local Cache
+      setUploadStage('saving');
       await saveProofToFirestore(newProofItem);
 
-      // 3. Also sync to backend API for dual-layer durability
-      try {
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-        };
-        if (adminToken) {
-          headers['Authorization'] = `Bearer ${adminToken}`;
-        }
-        await fetch('/api/public/add-proof', {
+      // 3. Asynchronously sync to backend in background (non-blocking)
+      if (adminToken) {
+        fetch('/api/public/add-proof', {
           method: 'POST',
-          headers,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
           body: JSON.stringify({
             customerId: cleanCustomerId,
-            customerName: customerName ? customerName.trim() : undefined,
+            customerName: customerName.trim() ? customerName.trim() : undefined,
             serviceName: cleanService,
             deliveryDate: cleanDate,
-            notes: notes ? notes.trim() : undefined,
+            notes: notes.trim() ? notes.trim() : undefined,
             screenshots: compressedUrls,
           }),
-        });
-      } catch (backendErr) {
-        console.warn('Backend API sync notice (Firestore write succeeded):', backendErr);
+        }).catch(() => {});
       }
 
+      setUploadStage('done');
       setSuccess(true);
+
+      // Instant transition! Show immediately in gallery
       setTimeout(() => {
         onNavigateHome();
-      }, 1500);
+      }, 400);
     } catch (err: any) {
       console.error('Error saving proof to Firestore:', err);
       setError(err.message || 'Error uploading screenshot to cloud database.');
@@ -464,12 +463,18 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
                 {uploading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                    <span>Uploading Original File(s)...</span>
+                    <span>
+                      {uploadStage === 'compressing'
+                        ? 'Optimizing Screenshot...'
+                        : uploadStage === 'saving'
+                        ? 'Saving to Cloud Database...'
+                        : 'Uploaded! Redirecting...'}
+                    </span>
                   </>
                 ) : (
                   <>
                     <Upload className="w-4 h-4" />
-                    <span>Upload &amp; Post Exact Original File</span>
+                    <span>Upload &amp; Post Instant Proof</span>
                   </>
                 )}
               </button>

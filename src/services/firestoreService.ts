@@ -7,12 +7,12 @@ import {
   deleteDoc,
   query,
   where,
-  orderBy,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { ProofItem, PublicProofData } from '../types';
 
 const PROOFS_COLLECTION = 'proofs';
+const CACHE_KEY = 'toolclubpk_proofs_cache_v1';
 
 // Initial sample proofs to seed into Firestore if the database is brand new
 const INITIAL_SAMPLE_PROOFS: ProofItem[] = [
@@ -46,7 +46,51 @@ const INITIAL_SAMPLE_PROOFS: ProofItem[] = [
   },
 ];
 
+// Memory cache for instantaneous 0ms rendering
+let inMemoryProofsCache: ProofItem[] | null = null;
 let hasAttemptedSeed = false;
+
+// Load cache from sessionStorage on client
+function loadSessionCache(): ProofItem[] | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(CACHE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch {}
+  return null;
+}
+
+function updateCache(proofs: ProofItem[]) {
+  inMemoryProofsCache = proofs;
+  if (typeof window !== 'undefined') {
+    try {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(proofs));
+    } catch {}
+  }
+}
+
+export function getCachedProofsInstant(): PublicProofData[] | null {
+  const cached = inMemoryProofsCache || loadSessionCache();
+  if (!cached || cached.length === 0) return null;
+  return cached
+    .filter((p) => p.status === 'active')
+    .map((p) => ({
+      id: p.id,
+      customerId: p.customerId,
+      customerName: p.customerName,
+      serviceName: p.serviceName,
+      deliveryDate: p.deliveryDate,
+      notes: p.notes,
+      screenshots: p.screenshots || [],
+      verifiedAt: p.verifiedAt || p.createdAt,
+      verificationHash: p.verificationHash,
+    }));
+}
 
 export async function getProofsFromFirestore(): Promise<ProofItem[]> {
   try {
@@ -59,6 +103,7 @@ export async function getProofsFromFirestore(): Promise<ProofItem[]> {
       for (const sample of INITIAL_SAMPLE_PROOFS) {
         await setDoc(doc(db, PROOFS_COLLECTION, sample.id), sample);
       }
+      updateCache(INITIAL_SAMPLE_PROOFS);
       return INITIAL_SAMPLE_PROOFS;
     }
 
@@ -76,9 +121,15 @@ export async function getProofsFromFirestore(): Promise<ProofItem[]> {
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
+    updateCache(proofs);
     return proofs;
   } catch (err) {
     console.error('[Firestore] Error fetching proofs:', err);
+    // If offline or network error, return cache if available
+    const cached = inMemoryProofsCache || loadSessionCache();
+    if (cached && cached.length > 0) {
+      return cached;
+    }
     throw err;
   }
 }
@@ -101,6 +152,8 @@ export async function getActivePublicProofsFromFirestore(): Promise<PublicProofD
       }));
   } catch (err) {
     console.error('[Firestore] Error fetching public proofs:', err);
+    const cached = getCachedProofsInstant();
+    if (cached) return cached;
     return [];
   }
 }
@@ -108,8 +161,16 @@ export async function getActivePublicProofsFromFirestore(): Promise<PublicProofD
 export async function getProofByCustomerIdFromFirestore(
   customerId: string
 ): Promise<ProofItem | null> {
+  const cleanId = customerId.trim().toUpperCase();
+
+  // Instant check from cache
+  const cached = inMemoryProofsCache || loadSessionCache();
+  if (cached) {
+    const found = cached.find((p) => p.customerId.toUpperCase() === cleanId || p.id === customerId);
+    if (found) return found;
+  }
+
   try {
-    const cleanId = customerId.trim().toUpperCase();
     const proofsCol = collection(db, PROOFS_COLLECTION);
     const q = query(proofsCol, where('customerId', '==', cleanId));
     const snapshot = await getDocs(q);
@@ -133,38 +194,60 @@ export async function getProofByCustomerIdFromFirestore(
 }
 
 export async function saveProofToFirestore(proof: ProofItem): Promise<void> {
+  const cleanId = proof.id || `proof-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  const cleanProof: ProofItem = {
+    ...proof,
+    id: cleanId,
+    customerId: (proof.customerId || '').trim().toUpperCase(),
+    serviceName: (proof.serviceName || 'Delivery Verification').trim(),
+    deliveryDate: (
+      proof.deliveryDate ||
+      new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+    ).trim(),
+    screenshots: Array.isArray(proof.screenshots) ? proof.screenshots : [],
+    status: proof.status || 'active',
+    createdAt: proof.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    verifiedAt: proof.verifiedAt || new Date().toISOString(),
+    verificationHash:
+      proof.verificationHash ||
+      Math.random().toString(36).substring(2) + Date.now().toString(36),
+  };
+
+  // Instantly push to in-memory & session cache so UI renders with 0ms delay!
+  const currentList = inMemoryProofsCache || loadSessionCache() || [];
+  const existingIdx = currentList.findIndex((p) => p.id === cleanId || p.customerId === cleanProof.customerId);
+  let updatedList: ProofItem[];
+  if (existingIdx >= 0) {
+    updatedList = [...currentList];
+    updatedList[existingIdx] = cleanProof;
+  } else {
+    updatedList = [cleanProof, ...currentList];
+  }
+  updateCache(updatedList);
+
+  // Prepare sanitized payload for Firestore (no undefined values)
+  const dataToSave: Record<string, any> = {
+    id: cleanProof.id,
+    customerId: cleanProof.customerId,
+    serviceName: cleanProof.serviceName,
+    deliveryDate: cleanProof.deliveryDate,
+    screenshots: cleanProof.screenshots,
+    status: cleanProof.status,
+    createdAt: cleanProof.createdAt,
+    updatedAt: cleanProof.updatedAt,
+    verifiedAt: cleanProof.verifiedAt,
+    verificationHash: cleanProof.verificationHash,
+  };
+
+  if (proof.customerName && typeof proof.customerName === 'string' && proof.customerName.trim()) {
+    dataToSave.customerName = proof.customerName.trim();
+  }
+  if (proof.notes && typeof proof.notes === 'string' && proof.notes.trim()) {
+    dataToSave.notes = proof.notes.trim();
+  }
+
   try {
-    const cleanId = proof.id || `proof-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-    const dataToSave: Record<string, any> = {
-      id: cleanId,
-      customerId: (proof.customerId || '').trim().toUpperCase(),
-      serviceName: (proof.serviceName || 'Delivery Verification').trim(),
-      deliveryDate: (proof.deliveryDate || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })).trim(),
-      screenshots: Array.isArray(proof.screenshots) ? proof.screenshots : [],
-      status: proof.status || 'active',
-      createdAt: proof.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      verifiedAt: proof.verifiedAt || new Date().toISOString(),
-      verificationHash:
-        proof.verificationHash ||
-        Math.random().toString(36).substring(2) + Date.now().toString(36),
-    };
-
-    // Only attach optional fields if they have a non-empty string value (Firestore rejects undefined)
-    if (proof.customerName && typeof proof.customerName === 'string' && proof.customerName.trim()) {
-      dataToSave.customerName = proof.customerName.trim();
-    }
-    if (proof.notes && typeof proof.notes === 'string' && proof.notes.trim()) {
-      dataToSave.notes = proof.notes.trim();
-    }
-
-    // Safety sweep: strip out any undefined keys whatsoever
-    Object.keys(dataToSave).forEach((key) => {
-      if (dataToSave[key] === undefined) {
-        delete dataToSave[key];
-      }
-    });
-
     const docRef = doc(db, PROOFS_COLLECTION, cleanId);
     await setDoc(docRef, dataToSave, { merge: true });
     console.log('[Firestore] Successfully permanently saved proof:', cleanId);
@@ -175,6 +258,11 @@ export async function saveProofToFirestore(proof: ProofItem): Promise<void> {
 }
 
 export async function deleteProofFromFirestore(proofId: string): Promise<void> {
+  // Remove from cache immediately
+  const currentList = inMemoryProofsCache || loadSessionCache() || [];
+  const updatedList = currentList.filter((p) => p.id !== proofId);
+  updateCache(updatedList);
+
   try {
     const docRef = doc(db, PROOFS_COLLECTION, proofId);
     await deleteDoc(docRef);
