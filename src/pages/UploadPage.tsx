@@ -132,10 +132,10 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
       const newProofItem: ProofItem = {
         id: proofId,
         customerId: cleanCustomerId,
-        customerName: customerName ? customerName.trim() : undefined,
+        customerName: customerName.trim() ? customerName.trim() : undefined,
         serviceName: cleanService,
         deliveryDate: cleanDate,
-        notes: notes ? notes.trim() : undefined,
+        notes: notes.trim() ? notes.trim() : undefined,
         screenshots: compressedUrls,
         status: 'active',
         createdAt: now,

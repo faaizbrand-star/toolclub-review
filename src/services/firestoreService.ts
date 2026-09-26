@@ -134,12 +134,13 @@ export async function getProofByCustomerIdFromFirestore(
 
 export async function saveProofToFirestore(proof: ProofItem): Promise<void> {
   try {
-    const cleanProof: ProofItem = {
-      ...proof,
-      id: proof.id || `proof-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      customerId: proof.customerId.trim().toUpperCase(),
-      serviceName: proof.serviceName.trim(),
-      deliveryDate: proof.deliveryDate.trim(),
+    const cleanId = proof.id || `proof-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    const dataToSave: Record<string, any> = {
+      id: cleanId,
+      customerId: (proof.customerId || '').trim().toUpperCase(),
+      serviceName: (proof.serviceName || 'Delivery Verification').trim(),
+      deliveryDate: (proof.deliveryDate || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })).trim(),
+      screenshots: Array.isArray(proof.screenshots) ? proof.screenshots : [],
       status: proof.status || 'active',
       createdAt: proof.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -149,9 +150,24 @@ export async function saveProofToFirestore(proof: ProofItem): Promise<void> {
         Math.random().toString(36).substring(2) + Date.now().toString(36),
     };
 
-    const docRef = doc(db, PROOFS_COLLECTION, cleanProof.id);
-    await setDoc(docRef, cleanProof, { merge: true });
-    console.log('[Firestore] Successfully permanently saved proof:', cleanProof.id);
+    // Only attach optional fields if they have a non-empty string value (Firestore rejects undefined)
+    if (proof.customerName && typeof proof.customerName === 'string' && proof.customerName.trim()) {
+      dataToSave.customerName = proof.customerName.trim();
+    }
+    if (proof.notes && typeof proof.notes === 'string' && proof.notes.trim()) {
+      dataToSave.notes = proof.notes.trim();
+    }
+
+    // Safety sweep: strip out any undefined keys whatsoever
+    Object.keys(dataToSave).forEach((key) => {
+      if (dataToSave[key] === undefined) {
+        delete dataToSave[key];
+      }
+    });
+
+    const docRef = doc(db, PROOFS_COLLECTION, cleanId);
+    await setDoc(docRef, dataToSave, { merge: true });
+    console.log('[Firestore] Successfully permanently saved proof:', cleanId);
   } catch (err) {
     console.error('[Firestore] Error saving proof to Firestore:', err);
     throw err;
