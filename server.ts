@@ -719,7 +719,12 @@ app.post(
 app.get('/api/public/proofs', (_req: Request, res: Response) => {
   const db = readDb();
   const activeProofs = db.proofs
-    .filter((p) => p.status === 'active')
+    .filter(
+      (p) =>
+        p.status === 'active' &&
+        !p.id?.startsWith('proof-sample-') &&
+        !p.id?.includes('sample')
+    )
     .sort(compareByDateDescending)
     .map((p) => ({
       id: p.id,

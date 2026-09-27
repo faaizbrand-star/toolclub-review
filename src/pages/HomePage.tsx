@@ -48,7 +48,7 @@ interface HomePageProps {
 export const HomePage: React.FC<HomePageProps> = () => {
   const initialCache = getCachedProofsInstant();
   const [proofs, setProofs] = useState<PublicProofData[]>(() => initialCache);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(() => initialCache.length === 0);
 
   // Lightbox state for inspecting screenshots
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -58,28 +58,39 @@ export const HomePage: React.FC<HomePageProps> = () => {
 
   const loadProofs = async () => {
     try {
-      // 1. Try directly reading from Google Cloud Firestore in the background
+      // 1. Try directly reading from Google Cloud Firestore
       const firestoreProofs = await getActivePublicProofsFromFirestore();
       if (firestoreProofs && firestoreProofs.length > 0) {
-        setProofs(firestoreProofs);
+        const cleanFirestore = firestoreProofs.filter(
+          (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+        );
+        setProofs(cleanFirestore);
         return;
       }
 
       // 2. Fallback to API if Firestore is empty
       const data = await api.getPublicProofs();
       if (data && data.length > 0) {
-        setProofs(data);
+        const clean = data.filter(
+          (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+        );
+        setProofs(clean);
       }
     } catch (err) {
       console.error('Failed to load proofs from Firestore, trying API fallback:', err);
       try {
         const data = await api.getPublicProofs();
         if (data && data.length > 0) {
-          setProofs(data);
+          const clean = data.filter(
+            (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+          );
+          setProofs(clean);
         }
       } catch (fallbackErr) {
         console.error('All proof fetch strategies failed:', fallbackErr);
       }
+    } finally {
+      setLoading(false);
     }
   };
 

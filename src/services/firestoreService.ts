@@ -15,41 +15,8 @@ import { compareByDateDescending } from '../utils/dateSorter';
 const PROOFS_COLLECTION = 'proofs';
 const CACHE_KEY = 'toolclubpk_proofs_cache_v2';
 
-// Initial sample proofs ordered latest date first
-export const INITIAL_SAMPLE_PROOFS: ProofItem[] = [
-  {
-    id: 'proof-sample-capcut-2',
-    customerId: 'TC-1026',
-    customerName: 'Verified Customer',
-    serviceName: 'CapCut Pro (Direct Mail Activation)',
-    deliveryDate: 'September 25, 2026',
-    notes: 'Instant account provisioning completed. Verified active license.',
-    screenshots: ['/proof-capcut-24sep.svg'],
-    status: 'active',
-    createdAt: '2026-09-25T14:30:00.000Z',
-    updatedAt: '2026-09-25T14:30:00.000Z',
-    verifiedAt: '2026-09-25T14:30:00.000Z',
-    verificationHash: '4a8b1c9f0d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a',
-  },
-  {
-    id: 'proof-sample-nordvpn-1',
-    customerId: 'TC-1025',
-    customerName: 'Verified Customer',
-    serviceName: 'NordVPN (1 Year Ultimate)',
-    deliveryDate: 'September 24, 2026',
-    notes: 'Premium 1-Year account activation credentials delivered. Zero tamper seal verified.',
-    screenshots: ['/proof-exact-1.jpg'],
-    status: 'active',
-    createdAt: '2026-09-24T12:00:00.000Z',
-    updatedAt: '2026-09-24T12:00:00.000Z',
-    verifiedAt: '2026-09-24T12:00:00.000Z',
-    verificationHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-  },
-];
-
-// Memory cache for instantaneous 0ms rendering
+// Memory cache for instantaneous rendering
 let inMemoryProofsCache: ProofItem[] | null = null;
-let hasAttemptedSeed = false;
 
 // Load persistent cache from localStorage
 function loadLocalCache(): ProofItem[] | null {
@@ -59,7 +26,10 @@ function loadLocalCache(): ProofItem[] | null {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        const clean = parsed.filter(
+          (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+        );
+        return clean.length > 0 ? clean : null;
       }
     }
   } catch {}
@@ -67,17 +37,25 @@ function loadLocalCache(): ProofItem[] | null {
 }
 
 function updateCache(proofs: ProofItem[]) {
-  inMemoryProofsCache = proofs;
+  const cleanProofs = proofs.filter(
+    (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+  );
+  inMemoryProofsCache = cleanProofs;
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(proofs));
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cleanProofs));
     } catch {}
   }
 }
 
 export function getCachedProofsInstant(): PublicProofData[] {
-  const cached = inMemoryProofsCache || loadLocalCache() || INITIAL_SAMPLE_PROOFS;
-  const sorted = [...cached].sort(compareByDateDescending);
+  const cached = inMemoryProofsCache || loadLocalCache();
+  if (!cached || cached.length === 0) return [];
+
+  const clean = cached.filter(
+    (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+  );
+  const sorted = [...clean].sort(compareByDateDescending);
   return sorted
     .filter((p) => p.status === 'active')
     .map((p) => ({
@@ -98,24 +76,28 @@ export async function getProofsFromFirestore(): Promise<ProofItem[]> {
     const proofsCol = collection(db, PROOFS_COLLECTION);
     const snapshot = await getDocs(proofsCol);
 
-    if (snapshot.empty && !hasAttemptedSeed) {
-      hasAttemptedSeed = true;
-      console.log('[Firestore] Database is empty. Seeding initial verified proofs...');
-      for (const sample of INITIAL_SAMPLE_PROOFS) {
-        await setDoc(doc(db, PROOFS_COLLECTION, sample.id), sample);
-      }
-      updateCache(INITIAL_SAMPLE_PROOFS);
-      return INITIAL_SAMPLE_PROOFS;
-    }
-
     const proofs: ProofItem[] = [];
+    const sampleDocIdsToDelete: string[] = [];
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data() as ProofItem;
+      const docId = data.id || docSnap.id;
+      if (docId.startsWith('proof-sample-') || docId.includes('sample')) {
+        sampleDocIdsToDelete.push(docSnap.id);
+        return;
+      }
       proofs.push({
         ...data,
-        id: data.id || docSnap.id,
+        id: docId,
       });
     });
+
+    // Delete any old sample documents from Firestore in the background
+    if (sampleDocIdsToDelete.length > 0) {
+      sampleDocIdsToDelete.forEach((id) => {
+        deleteDoc(doc(db, PROOFS_COLLECTION, id)).catch(() => {});
+      });
+    }
 
     // Sort strictly by delivery date descending (latest date at top, oldest at bottom)
     proofs.sort(compareByDateDescending);
@@ -127,7 +109,10 @@ export async function getProofsFromFirestore(): Promise<ProofItem[]> {
     // If offline or network error, return cache if available
     const cached = inMemoryProofsCache || loadLocalCache();
     if (cached && cached.length > 0) {
-      return [...cached].sort(compareByDateDescending);
+      const clean = cached.filter(
+        (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+      );
+      return [...clean].sort(compareByDateDescending);
     }
     throw err;
   }
