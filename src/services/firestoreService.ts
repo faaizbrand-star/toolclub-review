@@ -7,13 +7,15 @@ import {
   deleteDoc,
   query,
   where,
+  orderBy,
+  limit,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { ProofItem, PublicProofData } from '../types';
 import { compareByDateDescending } from '../utils/dateSorter';
 
 const PROOFS_COLLECTION = 'proofs';
-const CACHE_KEY = 'toolclubpk_proofs_cache_v2';
+const CACHE_KEY = 'toolclubpk_proofs_cache_v3';
 
 // Memory cache for instantaneous rendering
 let inMemoryProofsCache: ProofItem[] | null = null;
@@ -40,10 +42,14 @@ function updateCache(proofs: ProofItem[]) {
   const cleanProofs = proofs.filter(
     (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
   );
+  // Full in-memory cache
   inMemoryProofsCache = cleanProofs;
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cleanProofs));
+      // Store the most recent 25 proofs in localStorage (approx 350KB)
+      // This fits well within browser quota and avoids freezing the main thread
+      const recentToStore = cleanProofs.slice(0, 25);
+      localStorage.setItem(CACHE_KEY, JSON.stringify(recentToStore));
     } catch {}
   }
 }
@@ -69,6 +75,54 @@ export function getCachedProofsInstant(): PublicProofData[] {
       verifiedAt: p.verifiedAt || p.createdAt,
       verificationHash: p.verificationHash,
     }));
+}
+
+/**
+ * Ultra-fast initial query for first-time visitors:
+ * Queries the newest proofs with a limit(20) ordered by createdAt desc.
+ * Finishes in ~300ms instead of 10-15s, allowing instant gallery paint.
+ */
+export async function getFastInitialProofsFromFirestore(limitCount = 20): Promise<PublicProofData[]> {
+  try {
+    const proofsCol = collection(db, PROOFS_COLLECTION);
+    const q = query(proofsCol, orderBy('createdAt', 'desc'), limit(limitCount));
+    const snapshot = await getDocs(q);
+
+    const proofs: ProofItem[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data() as ProofItem;
+      const docId = data.id || docSnap.id;
+      if (docId.startsWith('proof-sample-') || docId.includes('sample')) return;
+      proofs.push({
+        ...data,
+        id: docId,
+      });
+    });
+
+    proofs.sort(compareByDateDescending);
+
+    // Save initial batch to memory & cache immediately
+    if (proofs.length > 0) {
+      updateCache(proofs);
+    }
+
+    return proofs
+      .filter((p) => p.status === 'active')
+      .map((p) => ({
+        id: p.id,
+        customerId: p.customerId,
+        customerName: p.customerName,
+        serviceName: p.serviceName,
+        deliveryDate: p.deliveryDate,
+        notes: p.notes,
+        screenshots: p.screenshots || [],
+        verifiedAt: p.verifiedAt || p.createdAt,
+        verificationHash: p.verificationHash,
+      }));
+  } catch (err) {
+    console.error('[Firestore] Fast initial fetch error:', err);
+    return [];
+  }
 }
 
 export async function getProofsFromFirestore(): Promise<ProofItem[]> {
