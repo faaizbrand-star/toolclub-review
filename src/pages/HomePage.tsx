@@ -21,7 +21,6 @@ import {
 import { api } from '../services/api';
 import {
   getActivePublicProofsFromFirestore,
-  getFastInitialProofsFromFirestore,
   getCachedProofsInstant,
 } from '../services/firestoreService';
 import { PublicProofData } from '../types';
@@ -46,17 +45,6 @@ interface HomePageProps {
   onNavigateToProof?: (customerId: string) => void;
 }
 
-function mergeProofLists(existing: PublicProofData[], incoming: PublicProofData[]): PublicProofData[] {
-  const map = new Map<string, PublicProofData>();
-  for (const p of existing) {
-    map.set(p.id || p.customerId, p);
-  }
-  for (const p of incoming) {
-    map.set(p.id || p.customerId, p);
-  }
-  return Array.from(map.values()).sort(compareByDateDescending);
-}
-
 export const HomePage: React.FC<HomePageProps> = () => {
   const initialCache = getCachedProofsInstant();
   const [proofs, setProofs] = useState<PublicProofData[]>(() => initialCache);
@@ -69,36 +57,38 @@ export const HomePage: React.FC<HomePageProps> = () => {
   const [lightboxTitle, setLightboxTitle] = useState('');
 
   const loadProofs = async () => {
-    // 1. Stage 1: Fast Parallel Race for Sub-Second First Paint (~300ms)
-    // Races between fast Firestore batch (top 20) and Edge API
     try {
-      const fastFirestorePromise = getFastInitialProofsFromFirestore(20);
-      const fastApiPromise = api.getPublicProofs();
+      // 1. Try directly reading from Google Cloud Firestore
+      const firestoreProofs = await getActivePublicProofsFromFirestore();
+      if (firestoreProofs && firestoreProofs.length > 0) {
+        const cleanFirestore = firestoreProofs.filter(
+          (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+        );
+        setProofs(cleanFirestore);
+        return;
+      }
 
-      Promise.any([
-        fastFirestorePromise.then((res) => (res && res.length > 0 ? res : Promise.reject())),
-        fastApiPromise.then((res) => (res && res.length > 0 ? res : Promise.reject())),
-      ])
-        .then((fastResults) => {
-          if (fastResults && fastResults.length > 0) {
-            setProofs((prev) => {
-              if (prev.length === 0) return fastResults;
-              return mergeProofLists(prev, fastResults);
-            });
-            setLoading(false);
-          }
-        })
-        .catch(() => {});
-    } catch {}
-
-    // 2. Stage 2: Background hydration of full gallery (90+ items) without blocking UI
-    try {
-      const fullProofs = await getActivePublicProofsFromFirestore();
-      if (fullProofs && fullProofs.length > 0) {
-        setProofs((prev) => mergeProofLists(prev, fullProofs));
+      // 2. Fallback to API if Firestore is empty
+      const data = await api.getPublicProofs();
+      if (data && data.length > 0) {
+        const clean = data.filter(
+          (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+        );
+        setProofs(clean);
       }
     } catch (err) {
-      console.error('Error fetching full gallery in background:', err);
+      console.error('Failed to load proofs from Firestore, trying API fallback:', err);
+      try {
+        const data = await api.getPublicProofs();
+        if (data && data.length > 0) {
+          const clean = data.filter(
+            (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+          );
+          setProofs(clean);
+        }
+      } catch (fallbackErr) {
+        console.error('All proof fetch strategies failed:', fallbackErr);
+      }
     } finally {
       setLoading(false);
     }
@@ -244,39 +234,13 @@ export const HomePage: React.FC<HomePageProps> = () => {
           </div>
         </div>
 
-        {/* Loading State with Instant Skeleton Preview */}
-        {loading && allScreenshots.length === 0 ? (
-          <div>
-            <div className="mb-4 flex items-center justify-between text-xs text-slate-400">
-              <span className="flex items-center gap-2">
-                <RefreshCw className="w-3.5 h-3.5 text-[#4ADE80] animate-spin" />
-                <span>Loading latest verified screenshots...</span>
-              </span>
+        {/* Loading State */}
+        {loading ? (
+          <div className="py-28 flex flex-col items-center justify-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#4ADE80]/10 border border-[#4ADE80]/30 flex items-center justify-center text-[#4ADE80] mb-4 animate-pulse">
+              <RefreshCw className="w-7 h-7 animate-spin" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-              {[...Array(8)].map((_, i) => (
-                <div
-                  key={`skeleton-${i}`}
-                  className="rounded-2xl bg-slate-900/50 border border-slate-800/80 overflow-hidden flex flex-col animate-pulse"
-                >
-                  <div className="aspect-[9/16] w-full bg-slate-950 flex flex-col items-center justify-center relative p-4">
-                    <div className="absolute top-3 left-3 w-16 h-5 bg-slate-800/80 rounded" />
-                    <div className="absolute top-3 right-3 w-16 h-5 bg-emerald-950/60 rounded" />
-                    <div className="w-12 h-12 rounded-xl bg-slate-800/40 flex items-center justify-center text-slate-700">
-                      <ShieldCheck className="w-6 h-6 opacity-30" />
-                    </div>
-                  </div>
-                  <div className="p-4 space-y-2.5 bg-slate-900/80 border-t border-slate-800/60">
-                    <div className="h-4 bg-slate-800/80 rounded w-3/4" />
-                    <div className="h-3 bg-slate-800/50 rounded w-1/2" />
-                    <div className="pt-2 border-t border-slate-800/60 flex justify-between">
-                      <div className="h-3 bg-slate-800/50 rounded w-20" />
-                      <div className="h-3 bg-emerald-900/40 rounded w-12" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-base font-semibold text-slate-300">Loading delivery proofs gallery...</p>
           </div>
         ) : allScreenshots.length === 0 ? (
           <div className="py-20 text-center bg-slate-900/40 rounded-2xl border border-slate-800/80 max-w-lg mx-auto p-8 backdrop-blur-md">
@@ -303,8 +267,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
                     src={item.url}
                     alt={`${item.serviceName} proof #${idx + 1}`}
                     className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-300"
-                    loading={idx < 8 ? 'eager' : 'lazy'}
-                    decoding="async"
+                    loading="lazy"
                   />
 
                   {/* Gradient Overlay & Zoom Pill on Hover */}

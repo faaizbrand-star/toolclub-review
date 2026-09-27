@@ -716,10 +716,9 @@ app.post(
 );
 
 // 9. Public Customer All Proofs Showcase (Direct read-only showcase for customers)
-app.get('/api/public/proofs', async (_req: Request, res: Response) => {
-  res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=300');
+app.get('/api/public/proofs', (_req: Request, res: Response) => {
   const db = readDb();
-  const activeProofs = (db.proofs || [])
+  const activeProofs = db.proofs
     .filter(
       (p) =>
         p.status === 'active' &&
@@ -738,48 +737,6 @@ app.get('/api/public/proofs', async (_req: Request, res: Response) => {
       verifiedAt: p.verifiedAt || p.createdAt,
       verificationHash: p.verificationHash,
     }));
-
-  if (activeProofs.length > 0) {
-    return res.json({
-      proofs: activeProofs,
-    });
-  }
-
-  // Fallback to Firestore if local database file is empty
-  try {
-    const configPath = path.resolve(process.cwd(), 'firebase-applet-config.json');
-    if (fs.existsSync(configPath)) {
-      const cfg = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      const { initializeApp, getApps } = await import('firebase/app');
-      const { getFirestore, collection, getDocs, query, orderBy, limit } = await import('firebase/firestore');
-      const firebaseApp = getApps().length > 0 ? getApps()[0] : initializeApp(cfg);
-      const firestore = getFirestore(firebaseApp, cfg.firestoreDatabaseId || '(default)');
-      const snap = await getDocs(query(collection(firestore, 'proofs'), orderBy('createdAt', 'desc'), limit(40)));
-      const firestoreProofs: any[] = [];
-      snap.forEach((docSnap) => {
-        const data = docSnap.data();
-        const docId = data.id || docSnap.id;
-        if (docId.startsWith('proof-sample-') || docId.includes('sample')) return;
-        if (data.status !== 'active') return;
-        firestoreProofs.push({
-          id: docId,
-          customerId: data.customerId,
-          customerName: data.customerName,
-          serviceName: data.serviceName,
-          deliveryDate: data.deliveryDate,
-          notes: data.notes,
-          screenshots: data.screenshots || [],
-          verifiedAt: data.verifiedAt || data.createdAt,
-          verificationHash: data.verificationHash,
-        });
-      });
-      if (firestoreProofs.length > 0) {
-        return res.json({ proofs: firestoreProofs });
-      }
-    }
-  } catch (err) {
-    console.error('Error fetching proofs from Firestore in server.ts:', err);
-  }
 
   return res.json({
     proofs: activeProofs,
