@@ -13,27 +13,77 @@ import { ProofItem, PublicProofData } from '../types';
 import { compareByDateDescending } from '../utils/dateSorter';
 
 const PROOFS_COLLECTION = 'proofs';
-const CACHE_KEY = 'toolclubpk_proofs_cache_v2';
+const CACHE_KEY = 'toolclubpk_proofs_cache_v4';
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes cache duration across page refreshes
 
-// Memory cache for instantaneous rendering
+interface CacheEnvelope {
+  timestamp: number;
+  data: ProofItem[];
+}
+
+// In-memory cache for 0ms instant rendering across component renders & navigations
 let inMemoryProofsCache: ProofItem[] | null = null;
+let inMemoryCacheTime: number = 0;
+
+// Request deduplication: ensures multiple simultaneous calls reuse the same in-flight query
+let inFlightProofsPromise: Promise<ProofItem[]> | null = null;
 
 // Load persistent cache from localStorage
-function loadLocalCache(): ProofItem[] | null {
+function loadLocalCacheEnvelope(): CacheEnvelope | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(CACHE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const clean = parsed.filter(
-          (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
-        );
-        return clean.length > 0 ? clean : null;
-      }
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+
+    // If envelope format { timestamp, data }
+    if (parsed && typeof parsed === 'object' && Array.isArray(parsed.data)) {
+      const clean = parsed.data.filter(
+        (p: ProofItem) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+      );
+      return { timestamp: parsed.timestamp || 0, data: clean };
+    }
+
+    // If legacy array format
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const clean = parsed.filter(
+        (p: ProofItem) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+      );
+      return { timestamp: 0, data: clean };
     }
   } catch {}
   return null;
+}
+
+function loadLocalCache(): ProofItem[] | null {
+  const envelope = loadLocalCacheEnvelope();
+  return envelope ? envelope.data : null;
+}
+
+/**
+ * Checks if a valid non-expired cache exists in memory or local storage.
+ * Prevents unnecessary Firestore READ operations on normal page refresh.
+ */
+export function isProofsCacheValid(): boolean {
+  const now = Date.now();
+  // 1. Check in-memory cache
+  if (inMemoryProofsCache && inMemoryProofsCache.length > 0) {
+    if (now - inMemoryCacheTime < CACHE_TTL_MS) {
+      return true;
+    }
+  }
+
+  // 2. Check persistent localStorage envelope
+  const envelope = loadLocalCacheEnvelope();
+  if (envelope && envelope.data && envelope.data.length > 0) {
+    if (now - envelope.timestamp < CACHE_TTL_MS) {
+      inMemoryProofsCache = envelope.data;
+      inMemoryCacheTime = envelope.timestamp;
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function updateCache(proofs: ProofItem[]) {
@@ -41,9 +91,15 @@ function updateCache(proofs: ProofItem[]) {
     (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
   );
   inMemoryProofsCache = cleanProofs;
+  inMemoryCacheTime = Date.now();
+
   if (typeof window !== 'undefined') {
     try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cleanProofs));
+      const envelope: CacheEnvelope = {
+        timestamp: inMemoryCacheTime,
+        data: cleanProofs,
+      };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(envelope));
     } catch {}
   }
 }
@@ -71,56 +127,75 @@ export function getCachedProofsInstant(): PublicProofData[] {
     }));
 }
 
-export async function getProofsFromFirestore(): Promise<ProofItem[]> {
-  try {
-    const proofsCol = collection(db, PROOFS_COLLECTION);
-    const snapshot = await getDocs(proofsCol);
-
-    const proofs: ProofItem[] = [];
-    const sampleDocIdsToDelete: string[] = [];
-
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data() as ProofItem;
-      const docId = data.id || docSnap.id;
-      if (docId.startsWith('proof-sample-') || docId.includes('sample')) {
-        sampleDocIdsToDelete.push(docSnap.id);
-        return;
-      }
-      proofs.push({
-        ...data,
-        id: docId,
-      });
-    });
-
-    // Delete any old sample documents from Firestore in the background
-    if (sampleDocIdsToDelete.length > 0) {
-      sampleDocIdsToDelete.forEach((id) => {
-        deleteDoc(doc(db, PROOFS_COLLECTION, id)).catch(() => {});
-      });
-    }
-
-    // Sort strictly by delivery date descending (latest date at top, oldest at bottom)
-    proofs.sort(compareByDateDescending);
-
-    updateCache(proofs);
-    return proofs;
-  } catch (err) {
-    console.error('[Firestore] Error fetching proofs:', err);
-    // If offline or network error, return cache if available
+export async function getProofsFromFirestore(forceRefresh = false): Promise<ProofItem[]> {
+  // 1. If not a forced refresh and cache is valid, reuse cached data with ZERO Firestore reads!
+  if (!forceRefresh && isProofsCacheValid()) {
     const cached = inMemoryProofsCache || loadLocalCache();
     if (cached && cached.length > 0) {
-      const clean = cached.filter(
-        (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
-      );
-      return [...clean].sort(compareByDateDescending);
+      return [...cached].sort(compareByDateDescending);
     }
-    throw err;
   }
+
+  // 2. If a network request is already running, deduplicate and reuse that exact promise
+  if (inFlightProofsPromise) {
+    return inFlightProofsPromise;
+  }
+
+  inFlightProofsPromise = (async () => {
+    try {
+      const proofsCol = collection(db, PROOFS_COLLECTION);
+      const snapshot = await getDocs(proofsCol);
+
+      const proofs: ProofItem[] = [];
+      const sampleDocIdsToDelete: string[] = [];
+
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data() as ProofItem;
+        const docId = data.id || docSnap.id;
+        if (docId.startsWith('proof-sample-') || docId.includes('sample')) {
+          sampleDocIdsToDelete.push(docSnap.id);
+          return;
+        }
+        proofs.push({
+          ...data,
+          id: docId,
+        });
+      });
+
+      // Delete any old sample documents from Firestore in the background
+      if (sampleDocIdsToDelete.length > 0) {
+        sampleDocIdsToDelete.forEach((id) => {
+          deleteDoc(doc(db, PROOFS_COLLECTION, id)).catch(() => {});
+        });
+      }
+
+      // Sort strictly by delivery date descending (latest date at top, oldest at bottom)
+      proofs.sort(compareByDateDescending);
+
+      updateCache(proofs);
+      return proofs;
+    } catch (err: any) {
+      console.warn('[Firestore] Error or quota limit encountered during fetch:', err?.message || err);
+      // Graceful error handling: If Firebase temporarily hits quota limit, reuse valid cached data
+      const cached = inMemoryProofsCache || loadLocalCache();
+      if (cached && cached.length > 0) {
+        const clean = cached.filter(
+          (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
+        );
+        return [...clean].sort(compareByDateDescending);
+      }
+      throw err;
+    } finally {
+      inFlightProofsPromise = null;
+    }
+  })();
+
+  return inFlightProofsPromise;
 }
 
-export async function getActivePublicProofsFromFirestore(): Promise<PublicProofData[]> {
+export async function getActivePublicProofsFromFirestore(forceRefresh = false): Promise<PublicProofData[]> {
   try {
-    const allProofs = await getProofsFromFirestore();
+    const allProofs = await getProofsFromFirestore(forceRefresh);
     return allProofs
       .filter((p) => p.status === 'active')
       .map((p) => ({
@@ -145,13 +220,14 @@ export async function getProofByCustomerIdFromFirestore(
 ): Promise<ProofItem | null> {
   const cleanId = customerId.trim().toUpperCase();
 
-  // Instant check from cache
+  // 1. Instant check from local cache - 0 Firestore reads!
   const cached = inMemoryProofsCache || loadLocalCache();
   if (cached) {
     const found = cached.find((p) => p.customerId.toUpperCase() === cleanId || p.id === customerId);
     if (found) return found;
   }
 
+  // 2. Only if not found in cache, make targeted query
   try {
     const proofsCol = collection(db, PROOFS_COLLECTION);
     const q = query(proofsCol, where('customerId', '==', cleanId));
@@ -159,13 +235,20 @@ export async function getProofByCustomerIdFromFirestore(
 
     if (!snapshot.empty) {
       const docSnap = snapshot.docs[0];
-      return { ...(docSnap.data() as ProofItem), id: docSnap.id };
+      const item = { ...(docSnap.data() as ProofItem), id: docSnap.id };
+      // Cache this individual record
+      const currentList = inMemoryProofsCache || loadLocalCache() || [];
+      if (!currentList.some((p) => p.id === item.id)) {
+        updateCache([item, ...currentList]);
+      }
+      return item;
     }
 
     // Try finding by document id
     const directDoc = await getDoc(doc(db, PROOFS_COLLECTION, customerId));
     if (directDoc.exists()) {
-      return { ...(directDoc.data() as ProofItem), id: directDoc.id };
+      const item = { ...(directDoc.data() as ProofItem), id: directDoc.id };
+      return item;
     }
 
     return null;

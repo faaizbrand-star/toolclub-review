@@ -157,10 +157,10 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
   };
 
   // Fetch proofs whenever authenticated or switching to manage tab
-  const fetchProofs = async () => {
+  const fetchProofs = async (force = false) => {
     setLoadingProofs(true);
     try {
-      const items = await getProofsFromFirestore();
+      const items = await getProofsFromFirestore(force);
       setProofsList([...items].sort(compareByDateDescending));
     } catch (err) {
       console.error('Failed to load proofs for management:', err);
@@ -171,7 +171,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchProofs();
+      fetchProofs(false);
     }
   }, [isAuthenticated, activeTab]);
 
@@ -920,7 +920,7 @@ export const UploadPage: React.FC<UploadPageProps> = ({ onNavigateHome }) => {
                 {/* Refresh and Count */}
                 <div className="flex items-center gap-2 justify-between md:justify-end">
                   <button
-                    onClick={fetchProofs}
+                    onClick={() => fetchProofs(true)}
                     disabled={loadingProofs}
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
                     title="Reload proofs from cloud database"

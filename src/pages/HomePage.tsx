@@ -22,6 +22,7 @@ import { api } from '../services/api';
 import {
   getActivePublicProofsFromFirestore,
   getCachedProofsInstant,
+  isProofsCacheValid,
 } from '../services/firestoreService';
 import { PublicProofData } from '../types';
 import { Lightbox } from '../components/Lightbox';
@@ -56,10 +57,16 @@ export const HomePage: React.FC<HomePageProps> = () => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [lightboxTitle, setLightboxTitle] = useState('');
 
-  const loadProofs = async () => {
+  const loadProofs = async (force = false) => {
+    // 1. If valid cached data exists and not forcing a refresh, skip Firestore read completely!
+    if (!force && isProofsCacheValid() && proofs.length > 0) {
+      setLoading(false);
+      return;
+    }
+
     try {
-      // 1. Try directly reading from Google Cloud Firestore
-      const firestoreProofs = await getActivePublicProofsFromFirestore();
+      // 1. Try reading from Google Cloud Firestore (or cached via firestoreService)
+      const firestoreProofs = await getActivePublicProofsFromFirestore(force);
       if (firestoreProofs && firestoreProofs.length > 0) {
         const cleanFirestore = firestoreProofs.filter(
           (p) => !p.id?.startsWith('proof-sample-') && !p.id?.includes('sample')
@@ -77,7 +84,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
         setProofs(clean);
       }
     } catch (err) {
-      console.error('Failed to load proofs from Firestore, trying API fallback:', err);
+      console.warn('Failed to load proofs from Firestore, trying API fallback:', err);
       try {
         const data = await api.getPublicProofs();
         if (data && data.length > 0) {
@@ -87,7 +94,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
           setProofs(clean);
         }
       } catch (fallbackErr) {
-        console.error('All proof fetch strategies failed:', fallbackErr);
+        console.warn('All proof fetch strategies failed:', fallbackErr);
       }
     } finally {
       setLoading(false);
@@ -95,7 +102,12 @@ export const HomePage: React.FC<HomePageProps> = () => {
   };
 
   useEffect(() => {
-    loadProofs();
+    // Only query Firestore if cache is missing or empty
+    if (!isProofsCacheValid() || proofs.length === 0) {
+      loadProofs(false);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   // Flatten and strictly sort ALL screenshots latest date first (Newest on top, Oldest on bottom)
